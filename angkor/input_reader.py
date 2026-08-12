@@ -1,5 +1,11 @@
 import yaml
-from geometry_2d import Region, GeometryEngine 
+try:
+    # Package-style import (pytest / `import angkor...`)
+    from .geometry_2d import Region, GeometryEngine
+except ImportError:
+    # Script-style fallback (`python angkor/input_reader.py`)
+    from geometry_2d import Region, GeometryEngine
+
 
 # ============================================
 # SolverSettings class

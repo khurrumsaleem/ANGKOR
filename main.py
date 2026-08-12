@@ -1,15 +1,20 @@
-import sys 
-import yaml 
-import os 
-import time 
+import sys
+import yaml
+import os
+import time
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'angkor'))
+# Make angkor/ importable both as a package and as bare names
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'angkor'))
 
+# Use a single import style (bare names via sys.path) to avoid
+# the "double-class" bug where solver_2d.Solver2D and
+# angkor.solver_2d.Solver2D are treated as different types by isinstance().
 from input_reader import InputReader
 from solver_2d    import Solver2D
 from output_2d    import Output2D
 from solver_mg    import SolverMG
-from output_mg    import OutputMG  
+from output_mg    import OutputMG
+from cmfd         import CMFD
 
 # ------------------------------------
 # - BANNER 
@@ -17,7 +22,7 @@ from output_mg    import OutputMG
 
 def print_banner():
     print("="*60)
-    print("     ANGKOR ⚛️  🇰🇭")
+    print("                 ANGKOR")
     print("     Advanced Neutron Group Diffusion")
     print("     K-eigenvalue of Reactors")
     print() 
@@ -79,7 +84,16 @@ def main(input_file):
             n_groups    = G,
             boundary    = getattr(reader, "boundary", None),
         )
-    solver.solve()
+        
+    # Pick a refinement factor that divides nx and ny evenly.
+    # Default rf=10; fall back to 5 or 1 if mesh size is not divisible.
+    for rf_try in (10, 5, 2, 1):
+        if solver.nx % rf_try == 0 and solver.ny % rf_try == 0:
+            rf = rf_try
+            break
+    cmfd = CMFD(solver, rf=rf)
+    solver.solve(cmfd=cmfd, cmfd_interval=5)
+    
     t3 = time.time()
     print(f"    Done in {t3-t2:.2f}s")
     
@@ -92,10 +106,8 @@ def main(input_file):
     os.makedirs(output_dir, exist_ok = True)
     
     if isinstance(solver, Solver2D):
-        from output_2d import Output2D
         out = Output2D(solver, reader)
     elif isinstance(solver, SolverMG):
-        from output_mg import OutputMG
         out = OutputMG(solver, reader)
         
     out.print_report()

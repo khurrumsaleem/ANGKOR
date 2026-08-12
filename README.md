@@ -250,6 +250,10 @@ MIT — free to use, modify, and distribute. See [LICENSE](LICENSE).
 ## Citation
 
 ```
+<<<<<<< HEAD
 MUTH Boravy, "ANGKOR: Advanced Neutron Group-diffusion K-eigenvalue Of Reactors Analysis", Institute of Technology of Cambodia, 2025.
+=======
+MUTH Boravy, "ANGKOR: Advanced Neutron Group-diffusion K-eigenvalue Of Reactors", Institute of Technology of Cambodia, 2025.
+>>>>>>> 44c1fe2 (Update)
 https://github.com/muthboravy007/ANGKOR
 ```

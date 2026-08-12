@@ -56,14 +56,31 @@ class Solver2D:
         
         #Step 2: get material properties 
         mat = self.materials[mat_name]
+        
+        # Read the named values first 
+        D1            = mat["D1"]
+        D2            = mat["D2"]
+        siga1         = mat["sigma_a1"]
+        siga2         = mat["sigma_a2"]
+        sigs12        = mat["sigma_s12"]
+        nusigf1       = mat["nu_sigma_f1"]
+        nusigf2       = mat["nu_sigma_f2"]
+        
         return {
-            "D1"            : mat["D1"],
-            "D2"            : mat["D2"],
-            "sigma_a1"      : mat["sigma_a1"],
-            "sigma_a2"      : mat["sigma_a2"],
-            "sigma_s12"     : mat["sigma_s12"],
-            "nu_sigma_f1"   : mat["nu_sigma_f1"],
-            "nu_sigma_f2"   : mat["nu_sigma_f2"]
+            "D1"            : D1,
+            "D2"            : D2, 
+            "sigma_a1"      : siga1,
+            "sigma_a2"      : siga2,
+            "sigma_s12"     : sigs12,      
+            "nu_sigma_f1"   : nusigf1,          
+            "nu_sigma_f2"   : nusigf2,
+            
+            "D"             : np.array([D1,D2]),
+            "sigma_a"       : np.array([siga1, siga2]),
+            "nu_sigma_f"    : np.array([nusigf1, nusigf2]),
+            "chi"           : np.array([1.0, 0.0]),
+            "sigma_s"       : np.array([[0.0, sigs12],
+                                        [0.0, 0.0]])      
         }
     
     def _boundary_coeff(self, D, h, side):
@@ -243,7 +260,7 @@ class Solver2D:
         print(f" Matrix F: {self.F.shape}," f"{self.F.nnz} non-zeros")
         
         
-    def solve(self):
+    def solve(self, cmfd=None, cmfd_interval=5):
         """
         Run power iteration to find k-eff and flux.
         Algorithm:
@@ -252,11 +269,16 @@ class Solver2D:
         3. Update k
         4. Check convergence
         5. Repeat until converged
-        """
         
-        N        = self.N
-        max_iter = self.settings.max_iterations
-        tol      = self.settings.convergence
+        Power iteration with optional CMFD acceleration.
+        arg:
+            cmfd: CMFD object (None = No acceleration)
+            cmfd_interval: apply CMFD every N iteration
+        
+        """
+        N           = self.N
+        max_iter    = self.settings.max_iterations
+        tol         = self.settings.convergence
         
         print(f"\n  Starting power iteration...")
         print(f"  Max iterations : {max_iter}")
@@ -280,24 +302,43 @@ class Solver2D:
             phi_new = linalg.spsolve(self.A, rhs)
             # --- Compute new fission source ---
             fission_new = self.F.dot(phi_new)
-            # --- Update k-eff ---
+            # --- Compute error Before updating right MUTH Boravy :(
             k_new = k * (np.sum(fission_new) / np.sum(fission_source))
-            # --- Check convergence ---
             k_error   = abs(k_new - k)
             phi_error = np.max(np.abs(phi_new - phi) / (np.abs(phi_new) + 1e-10))
-            # --- Print progress every 10 iterations ---
-            if (iteration + 1) % 10 == 0 or iteration == 0:
-                print(f"  Iter {iteration+1:4d}: "
-                      f"k={k_new:.6f}  "
-                      f"dk={k_error:.2e}  "
-                      f"dphi={phi_error:.2e}")
-            # --- Update for next iteration ---
-            phi = phi_new / np.max(phi_new)   # normalize
-            k   = k_new
-            # --- Converged? ---
-            if k_error < tol and phi_error < tol:
-                print(f"\n  CONVERGED at iteration {iteration+1}!")
+            
+            
+            # We update phi, and k 
+            phi = phi_new/np.max(phi_new)
+            k   = k_new 
+            
+            # Apply CMFD 
+            if cmfd is not None and (iteration+1)% cmfd_interval ==0\
+                and iteration>=9 and k_error < 1e-3 \
+                and phi_error <1e-2:
+                    
+                phi1 = phi[:N].reshape(self.ny, self.nx)
+                phi2 = phi[N:].reshape(self.ny, self.nx)
+                k_before = k 
+                               
+                phi1, phi2, k = cmfd.accelerate(phi1,phi2, k, n_cycles=1)
+                
+                phi = np.concatenate([phi1.flatten(), phi2.flatten()])
+                phi = phi/np.max(phi)
+                k_error = abs(k-k_before)
+                phi_error = 1.0
+                
+                
+            if cmfd is not None:
+                converged = k_error < tol
+            else: 
+                converged = k_error < tol and phi_error < tol
+                
+            if converged:
+                print(f"\n Converge at iteration {iteration+1}")
                 break
+        
+        self.iterations = iteration + 1
         # Step 4: Store results
         self.k_eff = k
         # Reshape flux from 1D vector → 2D arrays
@@ -314,46 +355,26 @@ if __name__ == "__main__":
     import sys, os
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     from input_reader import InputReader
+    from cmfd import CMFD
 
-    print("=" * 50)
-    print("  ANGKOR — 2D Diffusion Solver Test")
-    print("=" * 50)
+    print("\n" + "="*50)
+    print("  Testing WITH CMFD acceleration")
+    print("="*50)
 
-    # Load input
-    reader = InputReader("input/pwr_2d.yaml")
-    reader.read()
+    reader2 = InputReader("input/pwr_2d.yaml")
+    reader2.read()
+    solver2 = Solver2D(reader2.engine,
+                       reader2.materials,
+                       reader2.solver)
 
-    # Create and run solver
-    solver = Solver2D(reader.engine,
-                      reader.materials,
-                      reader.solver)
+    cmfd = CMFD(solver2, rf=10)
 
-    k_eff, flux1, flux2 = solver.solve()
+    import time
+    t0 = time.time()
+    k_cmfd, flux1_cmfd, flux2_cmfd = solver2.solve(
+            cmfd=cmfd, cmfd_interval=5)
+    t1 = time.time()
 
-    # Plot flux
-    import matplotlib.pyplot as plt
-
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-
-    im1 = axes[0].imshow(flux1, origin="lower",
-                          extent=[0, reader.engine.domain_x,
-                                  0, reader.engine.domain_y],
-                          cmap="hot", aspect="equal")
-    axes[0].set_title(f"Group 1 Flux (Fast)\nk-eff = {k_eff:.6f}")
-    axes[0].set_xlabel("x (cm)")
-    axes[0].set_ylabel("y (cm)")
-    plt.colorbar(im1, ax=axes[0])
-
-    im2 = axes[1].imshow(flux2, origin="lower",
-                          extent=[0, reader.engine.domain_x,
-                                  0, reader.engine.domain_y],
-                          cmap="hot", aspect="equal")
-    axes[1].set_title(f"Group 2 Flux (Thermal)\nk-eff = {k_eff:.6f}")
-    axes[1].set_xlabel("x (cm)")
-    axes[1].set_ylabel("y (cm)")
-    plt.colorbar(im2, ax=axes[1])
-
-    plt.tight_layout()
-    plt.savefig("flux_map.png", dpi=150)
-    plt.show()
-    print("\n  Flux map saved to flux_map.png")
+    print(f"\nResults comparison:")
+    print(f"  Without CMFD: k=1.183739 (45 iter)")
+    print(f"  With CMFD:    k={k_cmfd:.6f}, iter={solver2.iterations}, time={t1-t0:.1f}s")

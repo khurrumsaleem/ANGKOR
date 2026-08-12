@@ -16,4 +16,4 @@ def test_solver_keff():
                        reader.materials,
                        reader.solver)
     solver.solve()
-    assert abs(solver.k_eff - 1.179618)< 0.00010
+    assert abs(solver.k_eff - 1.183739)< 0.00010

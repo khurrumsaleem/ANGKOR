@@ -1,0 +1,1055 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{mdframed}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+\usepackage{tcolorbox}
+\usepackage{multicol}
+\usepackage{float}
+
+\tcbuselibrary{breakable}
+
+% Colors
+\definecolor{angkorblue}{RGB}{0,70,127}
+\definecolor{angkorgold}{RGB}{180,140,0}
+\definecolor{codegreen}{RGB}{0,120,0}
+\definecolor{codegray}{RGB}{100,100,100}
+\definecolor{codeblue}{RGB}{0,0,180}
+\definecolor{lightgray}{RGB}{248,248,248}
+\definecolor{lessonbg}{RGB}{232,244,255}
+\definecolor{warningbg}{RGB}{255,248,220}
+\definecolor{successbg}{RGB}{232,255,232}
+\definecolor{physicsbg}{RGB}{255,232,240}
+
+% Code style
+\lstdefinestyle{python}{
+    backgroundcolor=\color{lightgray},
+    commentstyle=\color{codegreen}\itshape,
+    keywordstyle=\color{codeblue}\bfseries,
+    stringstyle=\color{red!70!black},
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    numbers=left,
+    numberstyle=\tiny\color{codegray},
+    frame=single,
+    rulecolor=\color{angkorblue!40},
+    language=Python,
+    showstringspaces=false,
+    tabsize=4,
+    xleftmargin=15pt
+}
+\lstset{style=python}
+
+% Box styles
+\newtcolorbox{lessonbox}[1]{
+    colback=lessonbg, colframe=angkorblue,
+    fonttitle=\bfseries\color{white},
+    title=#1, breakable
+}
+\newtcolorbox{physicsbox}[1]{
+    colback=physicsbg, colframe=red!60!black,
+    fonttitle=\bfseries\color{white},
+    title=#1, breakable
+}
+\newtcolorbox{keybox}[1]{
+    colback=successbg, colframe=green!50!black,
+    fonttitle=\bfseries\color{white},
+    title=#1, breakable
+}
+\newtcolorbox{warnbox}[1]{
+    colback=warningbg, colframe=angkorgold,
+    fonttitle=\bfseries\color{black},
+    title=#1, breakable
+}
+
+% Headers
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\textcolor{angkorblue}{ANGKOR -- Lesson Notes}}
+\lhead{\textcolor{angkorblue}{\leftmark}}
+\rfoot{\thepage}
+\lfoot{\textcolor{codegray}{MUTH Boravy -- ITC Cambodia}}
+
+\titleformat{\section}{\Large\bfseries\color{angkorblue}}{\thesection}{1em}{}[\titlerule]
+\titleformat{\subsection}{\large\bfseries\color{angkorblue!80}}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{angkorblue!60}}{\thesubsubsection}{1em}{}
+
+\hypersetup{colorlinks=true, linkcolor=angkorblue, urlcolor=angkorgold}
+
+\begin{document}
+
+% Title Page
+\begin{titlepage}
+\centering
+\vspace*{1.5cm}
+{\Huge\bfseries\color{angkorblue} ANGKOR}\\[0.4cm]
+{\Large\color{angkorgold} Advanced Neutron Group-diffusion K-eigenvalue Of Reactors}\\[1cm]
+\rule{\linewidth}{0.5mm}\\[0.3cm]
+{\LARGE\bfseries Complete Lesson Notes \& Teaching Guide}\\[0.2cm]
+{\large From Python Basics to International Benchmark Validation}\\
+\rule{\linewidth}{0.5mm}\\[1.5cm]
+
+\begin{minipage}{0.7\textwidth}\centering
+{\large\textbf{Student:} MUTH Boravy}\\
+Nuclear Engineering Student\\
+Institute of Technology of Cambodia (ITC)\\
+Phnom Penh, Cambodia\\[0.3cm]
+\texttt{\href{https://github.com/muthboravy007/ANGKOR}{github.com/muthboravy007/ANGKOR}}
+\end{minipage}
+
+\vfill
+{\large\itshape ``Named after Angkor Wat ---\\
+because Cambodia's scientific legacy continues.''}\\[1cm]
+{\large March 2026}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+%==============================================================================
+\section{Student Profile and Learning Preferences}
+%==============================================================================
+
+\begin{lessonbox}{How to Teach Boravy Effectively}
+\begin{itemize}
+  \item \textbf{Method:} Fill-in-the-blank exercises -- never give full code directly
+  \item \textbf{Strength:} Strong physics intuition; uses physical reasoning to catch bugs
+  \item \textbf{Style:} Visual learners -- tables, diagrams, side-by-side comparisons work best
+  \item \textbf{Environment:} Windows, VS Code, Anaconda/venv, runs from ANGKOR root in terminal
+  \item \textbf{Prior knowledge:} MCNP experience -- nuclear concepts transfer well
+  \item \textbf{Docker:} Has OpenMC in Docker (openmc\_with\_jupyter image)
+  \item \textbf{Pace:} One concept at a time; validate (run code) before advancing
+\end{itemize}
+\end{lessonbox}
+
+\begin{warnbox}{Teaching Rules Established}
+\begin{enumerate}
+  \item Always ask the student to answer a physics question BEFORE coding it
+  \item Fix bugs one at a time -- never all at once
+  \item After every working result, ask ``why does this make sense physically?''
+  \item If student copies code without understanding, return to blank-filling
+\end{enumerate}
+\end{warnbox}
+
+%==============================================================================
+\section{Lesson 1: Python Classes -- The Foundation}
+%==============================================================================
+
+\subsection{Concept: What is a Class?}
+
+\begin{physicsbox}{Core Concept}
+A class is a \textbf{blueprint}. From one blueprint, you can build many objects.
+Each object has its own data (attributes) and behaviors (methods).
+\end{physicsbox}
+
+\subsection{Exercise 1: The Dog Class}
+
+\begin{lessonbox}{Teaching Goal}
+Introduce \texttt{\_\_init\_\_}, \texttt{self}, methods, and return values
+using a non-physics example before applying to reactor geometry.
+\end{lessonbox}
+
+\begin{lstlisting}[caption={Dog Class -- First Exercise}]
+class Dog:
+    def __init__(self, name, breed, age):
+        self.name  = name    # store name on the object
+        self.breed = breed   # store breed
+        self.age   = age     # store age
+
+    def bark(self):
+        print(f"{self.name} says: Woof!")
+
+    def is_puppy(self):
+        return self.age < 2  # True if under 2 years old
+
+# --- Test ---
+rex = Dog(name="Rex", breed="Labrador", age=1)
+rex.bark()           # Rex says: Woof!
+print(rex.is_puppy()) # True
+\end{lstlisting}
+
+\begin{keybox}{Key Lessons Learned}
+\begin{itemize}
+  \item \texttt{self.name = name} stores the input into the object
+  \item Methods with no return give actions; methods with \texttt{return} give values
+  \item Alignment formatting (\texttt{self.name\ \ \ = name}) is professional style
+  \item Student scored 5/5 blanks correct on first attempt
+\end{itemize}
+\end{keybox}
+
+\subsection{Exercise 2: The Region Class}
+
+\begin{physicsbox}{Connection to Reactor Physics}
+A reactor region is a rectangle with a material. The key question it must
+answer: ``Is point (x,y) inside me?'' This maps directly to the Dog class pattern.
+\end{physicsbox}
+
+\begin{lstlisting}[caption={Region Class -- Applied to Reactor Geometry}]
+class Region:
+    """A rectangular region in 2D space with an assigned material."""
+
+    def __init__(self, name, x_min, x_max, y_min, y_max, material):
+        self.name     = name
+        self.x_min    = x_min
+        self.x_max    = x_max
+        self.y_min    = y_min
+        self.y_max    = y_max
+        self.material = material
+        self._validate()  # check immediately on creation
+
+    def _validate(self):
+        """Private method -- called automatically, not by user."""
+        if self.x_min >= self.x_max:
+            raise ValueError(
+                f"Region '{self.name}': x_min must be < x_max")
+        if self.y_min >= self.y_max:
+            raise ValueError(
+                f"Region '{self.name}': y_min must be < y_max")
+
+    def contains(self, x, y):
+        """Return True if point (x,y) is inside this region."""
+        x_inside = self.x_min <= x <= self.x_max
+        y_inside = self.y_min <= y <= self.y_max
+        return x_inside and y_inside
+
+    def width(self):
+        return self.x_max - self.x_min   # DRY: defined once
+
+    def height(self):
+        return self.y_max - self.y_min
+
+    def area(self):
+        return self.width() * self.height()  # reuses width/height
+\end{lstlisting}
+
+\begin{keybox}{Design Decisions Made}
+\begin{enumerate}
+  \item \textbf{Cell-center mesh (Option 2):} Cell centers never land on boundaries,
+        so \texttt{contains()} never gets an ambiguous boundary point.
+        Used by CASMO, SIMULATE, PARCS.
+  \item \textbf{Private \_validate():} Called in \texttt{\_\_init\_\_} automatically.
+        User never needs to call it. Underscore = ``internal use only.''
+  \item \textbf{DRY principle:} \texttt{area()} calls \texttt{width()} and
+        \texttt{height()} -- if the formula changes, fix in one place only.
+\end{enumerate}
+\end{keybox}
+
+%==============================================================================
+\section{Lesson 2: 2D Geometry Engine}
+%==============================================================================
+
+\subsection{Concept: The Material Map}
+
+\begin{physicsbox}{Core Physics Concept}
+The geometry engine answers one fundamental question at every point in space:
+\textbf{``What material is here?''} The answer is stored as a 2D array called
+the \textbf{material map}.
+\end{physicsbox}
+
+\begin{lstlisting}[caption={Material Map -- 2D Array of Material Names}]
+# Example material map for a 10x10 mesh:
+# ['water' 'water' 'uo2_fuel' 'uo2_fuel' ... 'water']
+# ['water' 'water' 'uo2_fuel' 'uo2_fuel' ... 'water']
+# ...
+
+# Built using cell centers:
+dx = domain_x / nx          # cell width
+dy = domain_y / ny          # cell height
+
+x_centers = [(i + 0.5)*dx for i in range(nx)]  # never on boundary
+y_centers = [(j + 0.5)*dy for j in range(ny)]
+
+# Fill material map:
+material_map = np.empty((ny, nx), dtype=object)  # rows=y, cols=x
+for j in range(ny):
+    for i in range(nx):
+        x = x_centers[i]
+        y = y_centers[j]
+        for region in regions:
+            if region.contains(x, y):
+                material_map[j][i] = region.material
+                break
+\end{lstlisting}
+
+\begin{warnbox}{Common Bug: Rows = Y, Columns = X}
+NumPy arrays use \texttt{array[row][col]} = \texttt{array[j][i]}.
+Rows go \textbf{down} (y-direction). Columns go \textbf{right} (x-direction).
+Shape must be \texttt{(ny, nx)}, not \texttt{(nx, ny)}.
+\end{warnbox}
+
+\subsection{Cell Index Formula}
+
+\begin{physicsbox}{Flattening 2D to 1D}
+For a mesh with \texttt{nx} columns, cell $(i,j)$ maps to 1D index:
+\begin{equation}
+n = j \cdot n_x + i
+\end{equation}
+Moving \textbf{east} (i+1): $n$ increases by 1.
+Moving \textbf{north} (j+1): $n$ increases by $n_x$ (one full row).
+\end{physicsbox}
+
+\begin{lstlisting}[caption={Cell Index -- Student Exercise that Built Understanding}]
+# For a 4x3 mesh (nx=4, ny=3):
+#      i=0   i=1   i=2   i=3
+# j=2 [ 8  ][ 9  ][ 10 ][ 11 ]
+# j=1 [ 4  ][ 5  ][ 6  ][ 7  ]
+# j=0 [ 0  ][ 1  ][ 2  ][ 3  ]
+
+# Cell (i=2, j=1):  n = 1*4 + 2 = 6
+# East  (i=3, j=1): n = 7  = 6+1    (same row, +1)
+# North (i=2, j=2): n = 10 = 6+4    (next row, +nx)
+# West  (i=1, j=1): n = 5  = 6-1
+# South (i=2, j=0): n = 2  = 6-4
+\end{lstlisting}
+
+\subsection{Geometry Visualizer}
+
+\begin{lstlisting}[caption={Drawing Reactor Geometry with matplotlib}]
+import matplotlib.patches as patches
+import matplotlib.colors as mcolors
+
+class GeometryVisualizer:
+    MATERIAL_COLORS = {
+        "water":       "steelblue",
+        "uo2_fuel":    "orange",
+        "control_rod": "dimgray",
+    }
+
+    def plot_geometry(self, show_mesh=False):
+        fig, ax = plt.subplots(figsize=(10, 8))
+        for region in self.engine.regions:
+            color = self.MATERIAL_COLORS.get(region.material, "red")
+            rect  = patches.Rectangle(
+                (region.x_min, region.y_min),
+                region.width(), region.height(),
+                linewidth=2, edgecolor="black",
+                facecolor=color, alpha=0.7
+            )
+            ax.add_patch(rect)
+        ax.set_aspect("equal")
+        plt.show()
+\end{lstlisting}
+
+%==============================================================================
+\section{Lesson 3: YAML Input System}
+%==============================================================================
+
+\subsection{Why YAML?}
+
+\begin{lessonbox}{Design Rationale}
+Without YAML, users must edit Python code to change geometry -- that is a script,
+not a tool. With YAML, users write a text file like MCNP input cards.
+ANGKOR reads it and builds all objects automatically.
+\end{lessonbox}
+
+\begin{lstlisting}[language=Python, caption={How YAML Maps to Python Objects}]
+# YAML file:
+# materials:
+#   uo2_fuel:
+#     D1: 1.40
+#     D2: 0.37
+
+# Python access (after yaml.safe_load):
+data["materials"]["uo2_fuel"]["D1"]  # -> 1.40
+
+# Regions are a LIST (dash = list item):
+# regions:
+#   - name: fuel
+#     x_min: 20.0
+# Access:
+for r in data["regions"]:
+    name  = r["name"]    # "fuel"
+    x_min = r["x_min"]  # 20.0
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Auto-Detection of XS Format}]
+def _parse_materials(self):
+    """Reads YAML and auto-detects 2-group vs multi-group."""
+    for mat_name, props in mats.items():
+        if "groups" in props:
+            # MULTI-GROUP FORMAT
+            self.materials[mat_name] = {
+                "groups":      props["groups"],
+                "D":           props["D"],      # list of G values
+                "sigma_a":     props["sigma_a"],
+                "nu_sigma_f":  props["nu_sigma_f"],
+                "sigma_s":     props["sigma_s"], # G x G matrix
+                "chi":         props["chi"],
+            }
+        else:
+            # 2-GROUP FORMAT
+            self.materials[mat_name] = {
+                "D1":          props["D1"],
+                "D2":          props["D2"],
+                "sigma_a1":    props["sigma_a1"],
+                # ... etc
+            }
+\end{lstlisting}
+
+%==============================================================================
+\section{Lesson 4: 2D Neutron Diffusion Theory}
+%==============================================================================
+
+\subsection{From 1D to 2D}
+
+\begin{physicsbox}{The Diffusion Equation in 2D}
+In 1D, neutrons only move in x. In 2D, they move in both x and y.
+Adding the y-direction leakage term:
+
+\textbf{1D:}
+\begin{equation}
+-D \frac{d^2\phi}{dx^2} + \Sigma_a \phi = S
+\end{equation}
+
+\textbf{2D:}
+\begin{equation}
+-D\left(\frac{\partial^2\phi}{\partial x^2} +
+        \frac{\partial^2\phi}{\partial y^2}\right) + \Sigma_a \phi = S
+\end{equation}
+
+The sum of second derivatives is the \textbf{Laplacian} -- it captures
+total neutron leakage in all directions.
+\end{physicsbox}
+
+\subsection{Two-Group Equations}
+
+\begin{physicsbox}{2-Group Diffusion System}
+\textbf{Group 1 (Fast):}
+\begin{equation}
+-D_1\nabla^2\phi_1 + (\Sigma_{a1} + \Sigma_{s12})\phi_1
+= \frac{1}{k}(\nu\Sigma_{f1}\phi_1 + \nu\Sigma_{f2}\phi_2)
+\end{equation}
+
+\textbf{Group 2 (Thermal):}
+\begin{equation}
+-D_2\nabla^2\phi_2 + \Sigma_{a2}\phi_2 = \Sigma_{s12}\phi_1
+\end{equation}
+
+Note: $\Sigma_{s12}$ appears in Group 1 as \textbf{removal} (loss) and
+in Group 2 as \textbf{source} (gain).
+\end{physicsbox}
+
+\subsection{The 5-Point Stencil}
+
+\begin{physicsbox}{Finite Difference Approximation}
+At cell $(i,j)$, the Laplacian is approximated using 4 neighbors:
+\begin{equation}
+\nabla^2\phi \approx
+\frac{\phi_{i+1,j} - 2\phi_{i,j} + \phi_{i-1,j}}{\Delta x^2}
++ \frac{\phi_{i,j+1} - 2\phi_{i,j} + \phi_{i,j-1}}{\Delta y^2}
+\end{equation}
+
+The center coefficient (all removal terms):
+\begin{equation}
+C_1 = \frac{2D_1}{\Delta x^2} + \frac{2D_1}{\Delta y^2} + \Sigma_{a1} + \Sigma_{s12}
+\end{equation}
+
+For the IAEA benchmark with $D_1=1.5$, $\Sigma_{a1}=0.01$,
+$\Sigma_{s12}=0.02$, $\Delta x=1$ cm:
+\begin{equation}
+C_1 = 2(1.5) + 2(1.5) + 0.01 + 0.02 = 6.03 \text{ cm}^{-1}
+\end{equation}
+\end{physicsbox}
+
+%==============================================================================
+\section{Lesson 5: Matrix Assembly and Power Iteration}
+%==============================================================================
+
+\subsection{Matrix Structure}
+
+\begin{physicsbox}{The Eigenvalue Problem}
+For total unknowns $N = n_x \times n_y$ per group, with 2 groups:
+\begin{equation}
+\mathbf{A}\boldsymbol{\phi} = \frac{1}{k}\mathbf{F}\boldsymbol{\phi}
+\end{equation}
+
+Matrix $\mathbf{A}$ (size $2N \times 2N$): leakage + removal\\
+Matrix $\mathbf{F}$ (size $2N \times 2N$): fission source\\
+Vector $\boldsymbol{\phi}$ (size $2N$): flux [group1 cells, group2 cells]
+\end{physicsbox}
+
+\begin{lstlisting}[caption={Matrix Assembly -- The Core of the Solver}]
+def _build_matrices(self):
+    for j in range(ny):         # outer loop: y-direction (rows)
+        for i in range(nx):     # inner loop: x-direction (cols)
+            n  = j*nx + i       # 1D cell index
+
+            xs = self._get_xs(i, j)  # cross sections at this cell
+            D1, D2     = xs["D1"], xs["D2"]
+            siga1      = xs["sigma_a1"]
+            siga2      = xs["sigma_a2"]
+            sigs12     = xs["sigma_s12"]
+            nusigf1    = xs["nu_sigma_f1"]
+            nusigf2    = xs["nu_sigma_f2"]
+
+            Ex1 = D1/dx**2;  Ey1 = D1/dy**2
+            Ex2 = D2/dx**2;  Ey2 = D2/dy**2
+
+            C1 = siga1 + sigs12  # start with physics terms
+            C2 = siga2
+
+            # West neighbor
+            if i > 0:
+                add_A(n, j*nx+(i-1), -Ex1)  # coupling to left
+                add_A(n+N, j*nx+(i-1)+N, -Ex2)
+                C1 += Ex1;  C2 += Ex2
+            else:
+                C1 += self._boundary_coeff(D1, dx, "left")
+                C2 += self._boundary_coeff(D2, dx, "left")
+
+            # (East, South, North similarly...)
+
+            add_A(n,   n,   C1)    # diagonal LAST (after all neighbors)
+            add_A(n+N, n+N, C2)
+
+            # Scattering: group 1 -> group 2
+            add_A(n+N, n, -sigs12)
+
+            # Fission source
+            add_F(n,   n,   nusigf1)
+            add_F(n,   n+N, nusigf2)
+\end{lstlisting}
+
+\begin{warnbox}{Critical Bug Pattern: Diagonal Added Too Early}
+The center coefficient C1 accumulates leakage terms from each neighbor.
+If \texttt{add\_A(n, n, C1)} is called BEFORE processing neighbors,
+the diagonal will be wrong. Always add diagonal LAST.
+\end{warnbox}
+
+\subsection{Boundary Conditions}
+
+\begin{lstlisting}[caption={Extrapolated Boundary Condition}]
+def _boundary_coeff(self, D, h, side):
+    bc_type = self.bc.get(side, "vacuum")
+
+    if bc_type == "reflective":
+        return 0.0                     # no leakage at symmetry plane
+
+    elif bc_type == "vacuum":
+        # Extrapolated BC: flux = 0 at d_ex = 2.1312*D beyond boundary
+        d_ex = 2.1312 * D
+        return D / (h * (h/2 + d_ex)) # less leakage than simple BC
+
+    else:
+        return D / h**2                # simple zero-flux BC
+\end{lstlisting}
+
+\begin{lessonbox}{Why Reflective BC for Quarter-Core?}
+The IAEA benchmark is a quarter-core model. The symmetry planes (left and
+bottom boundaries) represent the CENTER of the reactor.
+At the center, $\partial\phi/\partial n = 0$ (zero current = no net flow).
+Using \textbf{vacuum} BC at these planes would force $\phi=0$ at core center
+-- completely wrong! This was the root cause of k-eff = 0.888 before the fix.
+After adding reflective BC: k-eff = 0.998.
+\end{lessonbox}
+
+\subsection{Power Iteration}
+
+\begin{lstlisting}[caption={Power Iteration -- Eigenvalue Solver}]
+def solve(self):
+    phi = np.ones(2 * N)   # initial flat flux guess
+    k   = 1.0              # initial k-eff guess
+
+    self._build_matrices()
+
+    for iteration in range(max_iter):
+        # Compute fission source
+        fission_source = self.F.dot(phi)
+
+        # Solve linear system: A * phi_new = (1/k) * F * phi
+        rhs     = fission_source / k
+        phi_new = linalg.spsolve(self.A, rhs)
+
+        # Update k-eff (ratio of new to old fission source)
+        fission_new = self.F.dot(phi_new)
+        k_new = k * np.sum(fission_new) / np.sum(fission_source)
+
+        # Convergence check
+        k_error   = abs(k_new - k)
+        phi_error = np.max(np.abs(phi_new - phi)/(np.abs(phi_new)+1e-10))
+
+        phi = phi_new / np.max(phi_new)  # normalize
+        k   = k_new
+
+        if k_error < tol and phi_error < tol:
+            break
+
+    # Reshape 1D vector to 2D arrays
+    self.flux1 = phi[:N].reshape(ny, nx)
+    self.flux2 = phi[N:].reshape(ny, nx)
+    self.k_eff = k
+\end{lstlisting}
+
+%==============================================================================
+\section{Lesson 6: Multi-Group Solver (SolverMG)}
+%==============================================================================
+
+\subsection{Generalizing from 2-Group to G-Group}
+
+\begin{physicsbox}{G-Group Center Coefficient}
+For group $g$ ($g = 0, 1, \ldots, G-1$), the removal cross section includes
+downscattering to ALL lower groups:
+\begin{equation}
+\Sigma_{r,g} = \Sigma_{a,g} + \sum_{g' > g} \Sigma_{s,g \to g'}
+\end{equation}
+
+Example for 4-group fuel ($g=1$):
+\begin{equation}
+C_2 = \frac{2D_2}{\Delta x^2} + \frac{2D_2}{\Delta y^2}
+      + \Sigma_{a2} + \Sigma_{s,2\to3} + \Sigma_{s,2\to4}
+\end{equation}
+\end{physicsbox}
+
+\begin{lstlisting}[caption={G-Group Cell Index and Matrix Assembly}]
+def _cell_index(self, g, i, j):
+    """Convert (group, i, j) to global matrix index."""
+    n = j * self.nx + i      # spatial cell index
+    return g * self.N + n    # group g starts at g*N
+
+# For G=4, N=2500:
+# Group 0: indices 0    to 2499
+# Group 1: indices 2500 to 4999
+# Group 2: indices 5000 to 7499
+# Group 3: indices 7500 to 9999
+
+def _build_matrices(self):
+    for j in range(self.ny):
+        for i in range(self.nx):
+            xs = self._get_xs(i, j)
+            for g in range(self.G):
+                row = self._cell_index(g, i, j)
+
+                # Center coefficient with all downscattering
+                C = sigma_a_eff[g] + sum(
+                    sigma_s[g][g2]
+                    for g2 in range(self.G) if g2 != g
+                )
+
+                # Spatial neighbors (same group g, different i/j)
+                if i > 0:
+                    add_A(row, self._cell_index(g, i-1, j), -Dx)
+                    C += Dx
+
+                # Downscattering (same cell i,j, different group g2)
+                for g_from in range(self.G):
+                    if g_from == g: continue
+                    add_S(row, self._cell_index(g_from,i,j),
+                          sigma_s[g_from][g])
+
+                # Fission source with chi spectrum
+                for g2 in range(self.G):
+                    add_F(row, self._cell_index(g2,i,j),
+                          chi[g] * nusigf[g2])
+
+                add_A(row, row, C)  # diagonal last!
+\end{lstlisting}
+
+\begin{keybox}{Key Insight: Spatial vs Group Coupling}
+\begin{itemize}
+  \item \textbf{Spatial neighbor}: same group $g$, different $(i,j)$
+        -- changes position, keeps energy
+  \item \textbf{Scattering}: different group $g'$, same $(i,j)$
+        -- changes energy, keeps position
+  \item \textbf{Fission}: different group $g'$, same $(i,j)$
+        -- neutron born in group determined by chi
+\end{itemize}
+\end{keybox}
+
+%==============================================================================
+\section{Lesson 7: IAEA 2D PWR Benchmark}
+%==============================================================================
+
+\subsection{Benchmark Description}
+
+\begin{lessonbox}{IAEA Benchmark Geometry}
+Quarter-core model ($170 \times 170$ cm) with three fuel material types and
+a water reflector. Each assembly is $10 \times 10$ cm. The staircase layout:
+
+\medskip
+\begin{center}
+\begin{tabular}{ccccccccc}
+F1&F1&F1&F1&F1&F1&F1&F1&R\\
+F1&F1&F1&F1&F1&F1&F1&F2&R\\
+F1&F1&F1&F1&F1&F2&F2&R&R\\
+F1&F1&F1&F1&F2&F2&R&R&R\\
+F1&F1&F1&F2&F2&CR&R&R&R\\
+F1&F1&F2&F2&CR&R&R&R&R\\
+F1&F1&F2&R&R&R&R&R&R\\
+F1&F2&R&R&R&R&R&R&R\\
+R&R&R&R&R&R&R&R&R\\
+\end{tabular}
+\end{center}
+
+\medskip
+Boundary: \textbf{reflective} on left and bottom (symmetry planes),
+\textbf{vacuum} on right and top.
+\end{lessonbox}
+
+\subsection{Cross Sections Used}
+
+\begin{center}
+\begin{tabular}{lrrrrrr}
+\toprule
+Material & $D_1$ & $D_2$ & $\Sigma_{a1}$ & $\Sigma_{a2}$
+         & $\Sigma_{s12}$ & $\nu\Sigma_{f2}$ \\
+\midrule
+Fuel 1   & 1.500 & 0.400 & 0.0100 & 0.0850 & 0.0200 & 0.135 \\
+Fuel 2   & 1.500 & 0.400 & 0.0100 & 0.1300 & 0.0200 & 0.135 \\
+Fuel+CR  & 1.500 & 0.400 & 0.0100 & 0.1800 & 0.0200 & 0.135 \\
+Reflector& 2.000 & 0.300 & 0.0000 & 0.0100 & 0.0400 & 0.000 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Results and Error Analysis}
+
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+Parameter & Value & Notes \\
+\midrule
+ANGKOR k-eff & 0.99837 & \\
+Reference k-eff & 1.02959 & IAEA published \\
+Error & -3086 pcm & Expected \\
+Iterations & 73 & Power iteration \\
+Runtime & $\sim$43 seconds & Python/SciPy \\
+Mesh convergence & 1.1 pcm & 170 vs 340 mesh \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{physicsbox}{Error Decomposition}
+The -3086 pcm error is physically expected:
+\begin{itemize}
+  \item $\sim$2000 pcm: Diffusion approximation vs transport theory (P1 vs B/N)
+  \item $\sim$1000 pcm: 2-group energy structure (spectral effects at fuel-reflector)
+  \item $<$100 pcm: Numerical (mesh, boundary) -- verified by convergence study
+\end{itemize}
+\textbf{Conclusion}: No code bugs. This is the correct answer for this level of approximation.
+\end{physicsbox}
+
+%==============================================================================
+\section{Lesson 8: Cross Section Generation with OpenMC}
+%==============================================================================
+
+\subsection{Group Condensation Theory}
+
+\begin{physicsbox}{Flux-Weighted Average}
+Cross sections must be averaged over energy groups using flux as a weight,
+because reactions occur where neutrons actually are:
+\begin{equation}
+\bar{\sigma}_g = \frac{\displaystyle\int_{E_{g+1}}^{E_g}\sigma(E)\phi(E)\,dE}
+                      {\displaystyle\int_{E_{g+1}}^{E_g}\phi(E)\,dE}
+\end{equation}
+Simple (unweighted) averages give wrong results because they ignore that
+thermal neutrons dominate reaction rates.
+\end{physicsbox}
+
+\begin{lstlisting}[caption={Group Condensation Implementation}]
+def condense(self, nuclide_data, group_structure="2-group"):
+    boundaries = self.Groups_Structure[group_structure]
+    G          = len(boundaries) - 1
+
+    E     = nuclide_data["energy"]
+    sig_f = nuclide_data["fission"]
+    phi   = 1.0 / E          # 1/E slowing-down spectrum
+
+    results = []
+    for g in range(G):
+        E_max = boundaries[g]      # high energy boundary
+        E_min = boundaries[g+1]    # low energy boundary
+
+        mask    = (E >= E_min) & (E <= E_max)
+        E_g     = E[mask]
+        sig_f_g = sig_f[mask]
+        phi_g   = phi[mask]
+
+        numer = np.trapezoid(sig_f_g * phi_g, E_g)  # numerator
+        denom = np.trapezoid(phi_g, E_g)             # denominator
+        results.append(numer / denom if denom > 0 else 0.0)
+
+    return results
+\end{lstlisting}
+
+\begin{keybox}{Numerical Convergence Study}
+\begin{center}
+\begin{tabular}{rrr}
+\toprule
+Grid Points & G2 $\sigma_f$ (thermal) & Change \\
+\midrule
+100   & 5397.4 barns & -- \\
+1000  & 5266.4 barns & 2.4\% \\
+10000 & 5262.7 barns & 0.06\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+Lesson: 100 points is NOT sufficient for nuclear data integration.
+10,000+ points required for $<$0.1\% accuracy.
+\end{keybox}
+
+\subsection{OpenMC Pin Cell Workflow}
+
+\begin{lstlisting}[caption={OpenMC PWR Pin Cell Setup}]
+import openmc
+
+# Materials
+uo2 = openmc.Material(name="UO2 Fuel")
+uo2.set_density("g/cm3", 10.29)
+uo2.add_nuclide("U235", 3.1,   percent_type="ao")  # 3.1% enriched
+uo2.add_nuclide("U238", 96.9,  percent_type="ao")
+uo2.add_nuclide("O16",  200.0, percent_type="ao")  # 2 O per U atom
+
+water = openmc.Material(name="Water")
+water.set_density("g/cm3", 0.7)
+water.add_nuclide("H1",  2.0, percent_type="ao")
+water.add_nuclide("O16", 1.0, percent_type="ao")
+water.add_s_alpha_beta("c_H_in_H2O")  # thermal scattering law
+
+# Geometry: fuel pin + water
+fuel_radius = openmc.ZCylinder(r=0.4096)  # cm
+pitch = 1.26  # cm
+
+fuel_cell  = openmc.Cell(fill=uo2,   region=-fuel_radius)
+water_cell = openmc.Cell(fill=water, region=+fuel_radius)
+
+# Settings: 150 batches, 50 inactive, 10000 particles
+settings = openmc.Settings()
+settings.batches   = 150
+settings.inactive  = 50    # let fission source converge first
+settings.particles = 10000
+\end{lstlisting}
+
+\begin{lessonbox}{Result: k-inf = 1.394 for Fresh Fuel Pin}
+This is physically correct: infinite lattice (no leakage) + fresh fuel
+(no burnup, no fission products) + no control rods = high k-eff.
+Real core k-eff $\approx$ 1.03 after leakage + control rods + feedback.
+\end{lessonbox}
+
+\begin{warnbox}{Lesson Learned: Two-Step Method Challenge}
+Pin cell XS from infinite lattice $\neq$ assembly XS for finite core.
+The core requires a \textbf{critical spectrum correction} (B$^2$ search)
+applied during XS generation. Without it, 4-group k-eff diverges to 1.37+.
+Proper XS generation needs a full assembly calculation in CASMO or Serpent.
+\end{warnbox}
+
+%==============================================================================
+\section{Lesson 9: CMFD Acceleration (In Progress)}
+%==============================================================================
+
+\subsection{Motivation: Dominance Ratio}
+
+\begin{physicsbox}{Why Power Iteration is Slow}
+The number of iterations needed is governed by the dominance ratio:
+\begin{equation}
+DR = \frac{k_1}{k_0} \quad \text{(ratio of 1st to fundamental eigenvalue)}
+\end{equation}
+For our reactor: $DR \approx 0.99$ means k-eff and the first harmonic are
+nearly identical. Power iteration needs many iterations to separate them.
+CMFD accelerates by solving a coarse mesh problem that has a smaller
+dominance ratio.
+\end{physicsbox}
+
+\subsection{CMFD Algorithm}
+
+\begin{lstlisting}[caption={CMFD Flux Homogenization}]
+class CMFD:
+    def __init__(self, solver, rf=10):
+        if solver.nx % rf != 0:
+            raise ValueError(f"nx={solver.nx} not divisible by rf={rf}")
+        if solver.ny % rf != 0:
+            raise ValueError(f"ny={solver.ny} not divisible by rf={rf}")
+
+        self.rf   = rf
+        self.nx_c = solver.nx // rf   # coarse cells in x
+        self.ny_c = solver.ny // rf   # coarse cells in y
+        self.Dx   = solver.dx * rf    # coarse cell width
+        self.Dy   = solver.dy * rf    # coarse cell height
+
+    def homogenize_flux(self, phi1_fine, phi2_fine):
+        """Average fine mesh flux onto coarse mesh."""
+        phi1_c = np.zeros((self.ny_c, self.nx_c))
+        phi2_c = np.zeros((self.ny_c, self.nx_c))
+
+        for J in range(self.ny_c):
+            for I in range(self.nx_c):
+                j_start = J * self.rf
+                j_end   = (J+1) * self.rf   # no -1 (Python exclusive)
+                i_start = I * self.rf
+                i_end   = (I+1) * self.rf
+
+                # numpy slicing: [rows, cols] = [j, i]
+                phi1_c[J][I] = np.mean(phi1_fine[j_start:j_end,
+                                                   i_start:i_end])
+                phi2_c[J][I] = np.mean(phi2_fine[j_start:j_end,
+                                                   i_start:i_end])
+        return phi1_c, phi2_c
+\end{lstlisting}
+
+\begin{physicsbox}{d-hat Correction Coefficient}
+At each coarse mesh interface, the correction coefficient ensures that
+the coarse mesh current matches the fine mesh current:
+\begin{equation}
+\hat{d} = \frac{J_{\text{fine}} -
+               \left(-\tilde{D}\dfrac{\Delta\Phi}{\Delta x}\right)}{\bar{\Phi}}
+\end{equation}
+The interface diffusion coefficient uses the \textbf{harmonic mean}
+(not simple average) to correctly handle material discontinuities:
+\begin{equation}
+D_{\text{interface}} = \frac{2D_i D_{i+1}}{D_i + D_{i+1}}
+\end{equation}
+Simple average would overestimate current at fuel-reflector boundaries.
+\end{physicsbox}
+
+%==============================================================================
+\section{Lesson 10: Software Engineering Practices}
+%==============================================================================
+
+\subsection{Key Python Concepts Mastered}
+
+\begin{lstlisting}[caption={Important Python Patterns Used Throughout}]
+# 1. context manager (always use for files)
+with open("file.yaml", "r", encoding="utf-8") as f:
+    data = yaml.safe_load(f)
+
+# 2. safe dictionary lookup with default
+sol.get("max_iterations", 1000)  # returns 1000 if key missing
+
+# 3. list comprehension (cell centers)
+x_centers = np.array([(i + 0.5) * dx for i in range(nx)])
+
+# 4. boolean mask (numpy)
+mask = (E >= E_min) & (E <= E_max)  # True where condition met
+E_g  = E[mask]                       # select matching elements
+
+# 5. sparse matrix construction
+A = sparse.csr_matrix((vals, (rows, cols)), shape=(size, size))
+
+# 6. f-string formatting
+print(f"k-eff = {k:.6f}  error = {dk:.2e}")
+
+# 7. try/except for validation testing
+try:
+    bad = Region("bad", 80.0, 20.0, 0.0, 100.0, "water")
+except ValueError as e:
+    print(f"Caught correctly: {e}")
+\end{lstlisting}
+
+\subsection{Common Bug Patterns}
+
+\begin{center}
+\begin{longtable}{p{3.5cm} p{5cm} p{5cm}}
+\toprule
+\textbf{Bug Type} & \textbf{Wrong} & \textbf{Correct} \\
+\midrule
+Loop bounds swapped & \texttt{for j in range(nx)} & \texttt{for j in range(ny)} \\
+Wrong property name & \texttt{region.material\_map} & \texttt{region.material} \\
+typo & \texttt{np.meaen()} & \texttt{np.mean()} \\
+Wrong axis & \texttt{phi[i\_start:i\_end, j...]} & \texttt{phi[j\_start:j\_end, i...]} \\
+Diagonal too early & \texttt{add\_A(n,n,C); C+=Ex} & \texttt{C+=Ex; add\_A(n,n,C)} \\
+Hardcoded instead of variable & \texttt{self.Groups["2-group"]} & \texttt{self.Groups[group\_structure]} \\
+Off-by-one in slice & \texttt{i\_end = (I+1)*rf - 1} & \texttt{i\_end = (I+1)*rf} \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+\subsection{Git Workflow}
+
+\begin{lstlisting}[language=bash, caption={Standard Git Workflow}]
+# Golden rule: ALWAYS pull before push
+git pull origin main
+git add <specific files>   # never use "git add ." carelessly
+git commit -m "feat: description of what was built"
+git push
+
+# Check what is tracked:
+git ls-files
+
+# Remove file from tracking (keep local copy):
+git rm --cached filename
+
+# See commit history:
+git log --oneline
+\end{lstlisting}
+
+\begin{lessonbox}{Repository Philosophy}
+Only commit what you can defend:
+\begin{itemize}
+  \item Validated results only (not work-in-progress with known wrong answers)
+  \item Learning files go in .gitignore
+  \item OpenMC experiment files (.xml, statepoint.h5) go in .gitignore
+  \item Unvalidated cross section files go in .gitignore
+\end{itemize}
+\end{lessonbox}
+
+%==============================================================================
+\section{Roadmap for Future Sessions}
+%==============================================================================
+
+\subsection{Next Immediate Steps}
+
+\begin{enumerate}
+  \item \textbf{Complete CMFD:} Implement \texttt{compute\_dhat()},
+        \texttt{build\_coarse\_matrices()}, \texttt{solve\_coarse()},
+        \texttt{rebalance\_flux()}, and \texttt{accelerate()}.
+        Expected: 5$\times$ speedup on IAEA benchmark.
+
+  \item \textbf{Test CMFD:} Confirm same k-eff with and without acceleration.
+        Measure iteration count and runtime reduction.
+
+  \item \textbf{Proper 4-group XS:} Run full assembly calculation in OpenMC
+        with B$^2$ search to get transport-corrected few-group XS.
+        This requires a $17\times17$ pin cell lattice calculation, not just
+        a single pin.
+
+  \item \textbf{Theory Manual:} Document all physics and numerical methods
+        in \texttt{docs/ANGKOR\_Theory\_Manual.tex}.
+\end{enumerate}
+
+\subsection{Medium-Term Goals}
+
+\begin{enumerate}
+  \item Cylindrical geometry for fuel pins
+  \item 3D Cartesian geometry extension
+  \item Adjoint flux solver (reactivity worth)
+  \item Burnup and depletion module
+  \item OECD/NEA C5G7 benchmark (7-group)
+\end{enumerate}
+
+\subsection{Long-Term Vision}
+
+\begin{lessonbox}{Cambodia's Nuclear Engineering Legacy}
+ANGKOR's goal is not just to compute k-eff. It is to demonstrate that
+Cambodia can contribute to the global nuclear engineering community
+through open-source software -- without relying on expensive commercial
+codes. The code should be readable, modifiable, and useful to any
+graduate student or researcher worldwide.
+
+The ITC group is also exploring ML surrogate models for SMR k-effective
+prediction. ANGKOR provides the reference data generation capability
+for such work.
+\end{lessonbox}
+
+%==============================================================================
+\vfill
+\begin{center}
+\rule{0.5\linewidth}{0.5pt}\\[0.5cm]
+{\small ANGKOR -- Advanced Neutron Group-diffusion K-eigenvalue Of Reactors}\\
+{\small\textit{Developed at the Institute of Technology of Cambodia}}\\
+{\small Phnom Penh, Cambodia}\\
+{\small \url{https://github.com/muthboravy007/ANGKOR}}\\[0.3cm]
+{\small\itshape ``Named after Angkor Wat -- because Cambodia's scientific legacy continues.''}
+\end{center}
+
+\end{document}

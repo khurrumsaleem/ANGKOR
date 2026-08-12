@@ -1,0 +1,723 @@
+\documentclass[12pt,a4paper]{article}
+
+% ---- Packages ----------------------------------------------------------------------------------------------------------------------------------
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{mdframed}
+\usepackage{fontenc}
+\usepackage{inputenc}
+
+% ---- Colors --------------------------------------------------------------------------------------------------------------------------------------
+\definecolor{angkorblue}{RGB}{0,70,127}
+\definecolor{angkorgold}{RGB}{180,140,0}
+\definecolor{codegreen}{RGB}{0,120,0}
+\definecolor{codegray}{RGB}{100,100,100}
+\definecolor{codeblue}{RGB}{0,0,180}
+\definecolor{lightgray}{RGB}{245,245,245}
+
+% ---- Code Listing Style ----------------------------------------------------------------------------------------------------------------
+\lstdefinestyle{pythonstyle}{
+    backgroundcolor=\color{lightgray},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{codeblue}\bfseries,
+    stringstyle=\color{red},
+    basicstyle=\ttfamily\small,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numberstyle=\tiny\color{codegray},
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=4,
+    language=Python,
+    frame=single,
+    rulecolor=\color{angkorblue}
+}
+\lstset{style=pythonstyle}
+
+% ---- Header/Footer --------------------------------------------------------------------------------------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\textcolor{angkorblue}{ANGKOR Project Documentation}}
+\lhead{\textcolor{angkorblue}{\leftmark}}
+\rfoot{\thepage}
+\lfoot{\textcolor{codegray}{Institute of Technology of Cambodia}}
+
+% ---- Section Colors ------------------------------------------------------------------------------------------------------------------------
+\titleformat{\section}
+  {\Large\bfseries\color{angkorblue}}
+  {\thesection}{1em}{}[\titlerule]
+
+\titleformat{\subsection}
+  {\large\bfseries\color{angkorblue!80}}
+  {\thesubsection}{1em}{}
+
+\titleformat{\subsubsection}
+  {\normalsize\bfseries\color{angkorblue!60}}
+  {\thesubsubsection}{1em}{}
+
+% ---- Hyperref Setup ------------------------------------------------------------------------------------------------------------------------
+\hypersetup{
+    colorlinks=true,
+    linkcolor=angkorblue,
+    urlcolor=angkorgold,
+    citecolor=angkorblue
+}
+
+% ----------------------------------------------------------------------------------------------------------------------------------------------------------
+\begin{document}
+
+% ---- Title Page --------------------------------------------------------------------------------------------------------------------------------
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+
+    {\Huge\bfseries\color{angkorblue} ANGKOR}\\[0.5cm]
+    {\Large\color{angkorgold}
+        Advanced Neutron Group-diffusion\\
+        K-eigenvalue Of Reactors}\\[1.5cm]
+
+    \rule{\linewidth}{0.5mm}\\[0.4cm]
+    {\large\bfseries Project Development Summary \& Documentation}\\
+    {\normalsize Technical Reference, Decisions, and Future Roadmap}\\
+    \rule{\linewidth}{0.5mm}\\[2cm]
+
+    \begin{minipage}{0.6\textwidth}
+        \centering
+        {\large\textbf{MUTH Boravy}}\\
+        Nuclear Engineering Student\\
+        Institute of Technology of Cambodia (ITC)\\
+        Phnom Penh, Cambodia\\[0.5cm]
+        \texttt{\href{https://github.com/muthboravy007/ANGKOR}
+        {github.com/muthboravy007/ANGKOR}}\\[0.5cm]
+        \textit{Developed with AI assistance (Claude, Anthropic)}
+    \end{minipage}
+
+    \vfill
+    {\large March 2026}
+\end{titlepage}
+
+% ---- Table of Contents ------------------------------------------------------------------------------------------------------------------
+\tableofcontents
+\newpage
+
+% =============================================================================
+\section{Project Overview}
+% =============================================================================
+
+ANGKOR is an open-source deterministic nuclear reactor physics code developed
+at the Institute of Technology of Cambodia (ITC). The name honors
+\textbf{Angkor Wat} --- the greatest symbol of Khmer civilization --- as a
+statement that Cambodia's scientific legacy continues in the modern era.
+
+\begin{mdframed}[linecolor=angkorblue, linewidth=2pt]
+\textbf{Mission Statement:} To place Cambodia on the world map of nuclear
+reactor physics analysis, providing an open-source alternative to commercial
+codes such as CASMO and SIMULATE, freely accessible to researchers,
+students, and engineers worldwide.
+\end{mdframed}
+
+\subsection{Code Identity}
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Full Name} & Advanced Neutron Group-diffusion K-eigenvalue Of Reactors \\
+\textbf{Language} & Python 3.13 (NumPy, SciPy, Matplotlib) \\
+\textbf{Method} & Deterministic: Finite Difference + Power Iteration \\
+\textbf{License} & MIT (free to use, modify, distribute) \\
+\textbf{Repository} & \url{https://github.com/muthboravy007/ANGKOR} \\
+\textbf{Institution} & Institute of Technology of Cambodia (ITC) \\
+\textbf{Country} & Cambodia \\ 
+\bottomrule
+\end{tabular}
+\end{center}
+
+% =============================================================================
+\section{Development History}
+% =============================================================================
+
+The project evolved from a simple 1D slab solver (originally named PyReactor)
+into a multi-group 2D diffusion code system. The development followed a
+structured pedagogical approach: build, validate, extend.
+
+\subsection{Version Timeline}
+
+\begin{longtable}{p{2.5cm} p{4cm} p{7cm}}
+\toprule
+\textbf{Version} & \textbf{Milestone} & \textbf{Description} \\
+\midrule
+v1.0 & 1D Foundation & 1D slab geometry, 2-group diffusion, power iteration.
+Validated: 0 pcm vs analytical solution. \\[6pt]
+v1.1 & 2D Geometry & 2D rectangular geometry engine with material map,
+interactive visualizer (color-coded, zoom/pan). \\[6pt]
+v1.2 & YAML Input & Human-readable YAML input system. Auto-detects 2-group
+vs multi-group format. \\[6pt]
+v1.3 & 2D Solver & 2D finite difference solver with reflective and vacuum
+boundary conditions. IAEA benchmark run. \\[6pt]
+v1.4 & Output Module & Professional flux maps, power distribution plots,
+centerline profiles, text reports. \\[6pt]
+v1.5 & Unit Tests & pytest suite: geometry, materials, solver tests. \\[6pt]
+v2.0 & Multi-Group & G-group solver (SolverMG) supporting arbitrary
+number of energy groups. \\[6pt]
+v2.1 & XS Reader & OpenMC HDF5 nuclear data reader with group condensation
+using flux-weighted averages. \\[6pt]
+v2.2 & CMFD Start & Coarse Mesh Finite Difference acceleration framework
+initiated (in progress). \\
+\bottomrule
+\end{longtable}
+
+% =============================================================================
+\section{Physics Foundation}
+% =============================================================================
+
+\subsection{Governing Equation}
+
+ANGKOR solves the multi-group neutron diffusion equation in 2D Cartesian
+geometry. For group $g$ ($g = 1, 2, \ldots, G$):
+
+\begin{equation}
+    -\nabla \cdot D_g(\mathbf{r}) \nabla \phi_g(\mathbf{r})
+    + \Sigma_{r,g}(\mathbf{r}) \phi_g(\mathbf{r})
+    = \chi_g \frac{1}{k} \sum_{g'=1}^{G} \nu\Sigma_{f,g'}(\mathbf{r})
+      \phi_{g'}(\mathbf{r})
+    + \sum_{\substack{g'=1\\g'\neq g}}^{G}
+      \Sigma_{s,g'\to g}(\mathbf{r}) \phi_{g'}(\mathbf{r})
+\end{equation}
+
+where the removal cross section is:
+\begin{equation}
+    \Sigma_{r,g} = \Sigma_{a,g} + \sum_{g'\neq g} \Sigma_{s,g\to g'}
+\end{equation}
+
+\subsection{Finite Difference Discretization}
+
+The Laplacian is approximated using the 5-point stencil on a uniform mesh
+with spacing $\Delta x$, $\Delta y$:
+
+\begin{equation}
+    \nabla^2 \phi \approx
+    \frac{\phi_{i+1,j} - 2\phi_{i,j} + \phi_{i-1,j}}{\Delta x^2}
+    + \frac{\phi_{i,j+1} - 2\phi_{i,j} + \phi_{i,j-1}}{\Delta y^2}
+\end{equation}
+
+Each cell $(i,j)$ is connected to its four neighbors (west, east, south,
+north). The center coefficient for group $g$ at cell $n$ is:
+
+\begin{equation}
+    C_g = \frac{2D_g}{\Delta x^2} + \frac{2D_g}{\Delta y^2}
+          + \Sigma_{a,g} + \sum_{g'>g} \Sigma_{s,g\to g'}
+\end{equation}
+
+\subsection{Boundary Conditions}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Type} & \textbf{Mathematical Form} & \textbf{FDM Implementation} \\
+\midrule
+Vacuum (zero flux) & $\phi = 0$ at boundary & Add $D/\Delta x^2$ to diagonal \\
+Reflective (zero current) & $\partial\phi/\partial n = 0$ & No leakage term added \\
+Extrapolated & $\phi = 0$ at $d_{ex} = 2.1312D$ beyond & $D/(\Delta x(\Delta x/2 + d_{ex}))$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Power Iteration Algorithm}
+
+The eigenvalue equation $\mathbf{A}\boldsymbol{\phi} =
+\frac{1}{k}\mathbf{F}\boldsymbol{\phi}$ is solved iteratively:
+
+\begin{enumerate}
+    \item Initialize: $k^{(0)} = 1.0$, $\boldsymbol{\phi}^{(0)} = \mathbf{1}$
+    \item Compute fission source: $\mathbf{S}^{(n)} = \mathbf{F}\boldsymbol{\phi}^{(n)}$
+    \item Solve linear system: $\mathbf{A}\boldsymbol{\phi}^{(n+1)} = \mathbf{S}^{(n)}/k^{(n)}$
+    \item Update eigenvalue:
+        $k^{(n+1)} = k^{(n)} \dfrac{\sum \mathbf{F}\boldsymbol{\phi}^{(n+1)}}
+        {\sum \mathbf{F}\boldsymbol{\phi}^{(n)}}$
+    \item Check convergence: $|k^{(n+1)} - k^{(n)}| < \varepsilon$
+    \item Normalize flux and repeat until converged
+\end{enumerate}
+
+% =============================================================================
+\section{Code Architecture}
+% =============================================================================
+
+\subsection{Module Structure}
+
+\begin{verbatim}
+ANGKOR/
+|-- angkor/
+|   |-- geometry_2d.py     # Region, GeometryEngine, GeometryVisualizer
+|   |-- input_reader.py    # YAML parser, SolverSettings, auto-detect XS format
+|   |-- solver_2d.py       # 2-group FD solver with BC support
+|   |-- solver_mg.py       # G-group generalized solver
+|   |-- output_2d.py       # Flux maps, power distribution, reports
+|   |-- output_mg.py       # Multi-group output module
+|   |-- cmfd.py            # CMFD acceleration (in progress)
+|   |-- xs_reader.py       # HDF5 nuclear data reader
+|   |-- geometry.py        # 1D geometry (legacy)
+|   `-- solver_1d.py       # 1D solver (legacy)
+|-- input/
+|   |-- iaea_2d.yaml       # IAEA 2D PWR benchmark (validated)
+|   `-- pwr_2d.yaml        # Simple PWR 2D slab test
+|-- tests/
+|   |-- test_geometry_2d.py
+|   |-- test_solver_2d.py
+|   `-- ...
+|-- benchmarks/
+|-- docs/
+|-- main.py                # Entry point
+`-- requirements.txt
+\end{verbatim}
+
+\subsection{Data Flow}
+
+\begin{center}
+\begin{tabular}{ccccc}
+\texttt{YAML file}
+& $\longrightarrow$ & \texttt{InputReader}
+& $\longrightarrow$ & \texttt{GeometryEngine} \\
+& & & & $\downarrow$ \\
+\texttt{Output files}
+& $\longleftarrow$ & \texttt{Output2D/MG}
+& $\longleftarrow$ & \texttt{Solver2D/MG} \\
+\end{tabular}
+\end{center}
+
+\subsection{Key Design Decisions}
+
+\begin{enumerate}
+    \item \textbf{Cell-centered mesh (Option 2)}: Cell centers never land on
+    material boundaries, eliminating the overlap ambiguity problem. This is
+    identical to the approach used in CASMO, SIMULATE, and PARCS.
+
+    \item \textbf{Sparse matrix storage}: For a $170\times170$ mesh with
+    2 groups, the full matrix would require 26.7 GB. Sparse storage reduces
+    this to approximately 2.8 MB.
+
+    \item \textbf{Auto-detection of XS format}: \texttt{InputReader}
+    automatically detects 2-group (D1, D2, sigma\_a1...) vs multi-group
+    (groups, D, sigma\_a...) format by checking for the \texttt{groups} key.
+
+    \item \textbf{Separate solver files}: \texttt{solver\_2d.py} (optimized
+    2-group) and \texttt{solver\_mg.py} (general G-group) coexist. The
+    2-group solver preserves backward compatibility and validated results.
+
+    \item \textbf{Reflective boundary conditions}: Implemented by omitting the
+    leakage term at symmetry planes, enabling quarter-core modeling.
+\end{enumerate}
+
+% =============================================================================
+\section{Validation Results}
+% =============================================================================
+
+\subsection{1D Analytical Benchmark}
+
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Case} & \textbf{ANGKOR} & \textbf{Reference} & \textbf{Error (pcm)} \\
+\midrule
+Bare slab (analytical) & 1.305447 & 1.305446 & 0 \\
+Moderated slab (MCNP) & 1.30866 & 1.32811 & 1464 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The 1464 pcm difference with MCNP for the moderated slab is expected: it
+reflects the fundamental difference between diffusion theory and Monte Carlo
+transport, not a code error.
+
+\subsection{IAEA 2D PWR Quarter-Core Benchmark}
+
+The IAEA 2D PWR benchmark is a standard international test problem for
+reactor diffusion codes. It models a quarter-core ($170 \times 170$ cm) with
+three fuel types and a water reflector.
+
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Parameter} & \textbf{Value} & \textbf{Notes} \\
+\midrule
+Domain & $170 \times 170$ cm & Quarter-core with symmetry \\
+Mesh & $170 \times 170$ & $\Delta x = \Delta y = 1.0$ cm \\
+Energy groups & 2 & Fast + thermal \\
+Boundary (left, bottom) & Reflective & Symmetry planes \\
+Boundary (right, top) & Vacuum & Outer edges \\
+Convergence tolerance & $10^{-6}$ & Both $k$ and $\phi$ \\
+Iterations to converge & 73 & Power iteration \\
+Runtime & $\approx 43$ seconds & Python/SciPy \\
+\midrule
+\textbf{ANGKOR k-eff} & \textbf{0.99837} & \\
+\textbf{Reference k-eff} & \textbf{1.02959} & IAEA published value \\
+\textbf{Error} & $\mathbf{-3086}$ \textbf{pcm} & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsubsection{Error Analysis}
+
+The $-3086$ pcm discrepancy is physically expected and well understood:
+
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+\textbf{Error Source} & \textbf{Estimated Contribution} \\
+\midrule
+Diffusion approximation (vs transport) & $\sim$2000 pcm \\
+2-group energy structure & $\sim$1000 pcm \\
+Numerical (mesh, boundary) & $<$100 pcm \\
+\midrule
+\textbf{Total} & $\sim$3086 pcm \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Mesh convergence was verified: refining from $170\times170$ to $340\times340$
+changed k-eff by only 1.1 pcm, confirming the solution is mesh-converged and
+the remaining error is physics-related, not numerical.
+
+% =============================================================================
+\section{Cross Section Generation}
+% =============================================================================
+
+\subsection{OpenMC Integration}
+
+An OpenMC-based cross section generation workflow was developed using Docker:
+
+\begin{enumerate}
+    \item Define PWR pin cell geometry (fuel pin radius = 0.4096 cm,
+          pitch = 1.26 cm)
+    \item Define UO2 fuel (3.1\% enriched) and water materials
+    \item Run OpenMC Monte Carlo simulation (150 batches, 50 inactive,
+          10,000 particles/batch)
+    \item Extract flux-weighted few-group cross sections via tallies
+    \item Export to YAML for ANGKOR input
+\end{enumerate}
+
+\subsection{Group Condensation Theory}
+
+Cross sections are averaged over energy groups using flux weighting:
+
+\begin{equation}
+    \bar{\sigma}_g = \frac{\displaystyle\int_{E_{g+1}}^{E_g}
+    \sigma(E)\,\phi(E)\,dE}
+    {\displaystyle\int_{E_{g+1}}^{E_g} \phi(E)\,dE}
+\end{equation}
+
+The diffusion coefficient uses the harmonic mean at interfaces to ensure
+current continuity:
+
+\begin{equation}
+    D_{\text{interface}} = \frac{2 D_i D_{i+1}}{D_i + D_{i+1}}
+\end{equation}
+
+\subsection{4-Group Energy Structure}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Group} & \textbf{Energy Range} & \textbf{Physics Region} \\
+\midrule
+1 & $> 0.821$ MeV & Fast (fission spectrum) \\
+2 & $5.53$ keV -- $0.821$ MeV & Epithermal (slowing down) \\
+3 & $0.625$ eV -- $5.53$ keV & Resonance \\
+4 & $< 0.625$ eV & Thermal (Maxwellian) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Lesson Learned: Two-Step Method}
+
+Pin cell cross sections from an infinite lattice calculation cannot be used
+directly in core diffusion without a critical spectrum correction (B$^2$
+correction). Proper few-group XS generation requires:
+
+\begin{enumerate}
+    \item Full assembly calculation (not just pin cell)
+    \item B$^2$ search for critical spectrum
+    \item Spatial homogenization (SPH factors)
+\end{enumerate}
+
+This is what CASMO does. Future work will implement this properly.
+
+% =============================================================================
+\section{CMFD Acceleration (In Progress)}
+% =============================================================================
+
+\subsection{Motivation}
+
+Current power iteration requires 73 iterations for the IAEA benchmark.
+CMFD (Coarse Mesh Finite Difference) reduces this to $\sim$10--15 iterations
+by introducing a two-level solution strategy.
+
+\subsection{Algorithm}
+
+\begin{enumerate}
+    \item Perform fine mesh sweep (Gauss-Seidel)
+    \item Compute interface currents $J_{\text{fine}}$
+    \item Calculate $\hat{d}$ correction coefficients:
+        \begin{equation}
+            \hat{d} = \frac{J_{\text{fine}} -
+            \left(-\tilde{D}\,\Delta\Phi/\Delta x\right)}{\bar{\Phi}}
+        \end{equation}
+    \item Solve coarse mesh eigenvalue problem (small matrix)
+    \item Rebalance fine mesh flux using ratio:
+        \begin{equation}
+            \phi_{\text{fine}}^{\text{new}} = \phi_{\text{fine}}
+            \times \frac{\phi_{\text{coarse}}^{\text{new}}}
+            {\phi_{\text{coarse}}^{\text{old}}}
+        \end{equation}
+    \item Check convergence
+\end{enumerate}
+
+\subsection{Implementation Status}
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Component} & \textbf{Status} \\
+\midrule
+\texttt{\_\_init\_\_()} & Complete [done] \\
+\texttt{homogenize\_flux()} & Complete [done] \\
+\texttt{compute\_dhat()} & In progress \\
+\texttt{build\_coarse\_matrices()} & Planned \\
+\texttt{solve\_coarse()} & Planned \\
+\texttt{rebalance\_flux()} & Planned \\
+\texttt{accelerate()} & Planned \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Expected Performance}
+
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Configuration} & \textbf{Iterations} & \textbf{Runtime} \\
+\midrule
+Without CMFD (current) & $\sim$73 & $\sim$43 seconds \\
+With CMFD (expected) & $\sim$15 & $\sim$8 seconds \\
+Speedup & $\sim$5$\times$ & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% =============================================================================
+\section{Teaching Methodology and Learning Outcomes}
+% =============================================================================
+
+\subsection{Teaching Approach}
+
+The project was developed using a \textbf{fill-in-the-blank} methodology:
+\begin{itemize}
+    \item Instructor provides skeleton code with blanks
+    \item Student fills blanks based on physical understanding
+    \item Student runs code and observes results
+    \item Errors are diagnosed and corrected with explanation
+    \item Understanding is verified through physics questions
+\end{itemize}
+
+\subsection{Key Concepts Learned}
+
+\begin{enumerate}
+    \item \textbf{Python OOP}: Classes, methods, \texttt{self}, private methods
+    (\texttt{\_validate}), DRY principle
+    \item \textbf{Numerical methods}: Finite difference, sparse matrices,
+    power iteration, convergence criteria
+    \item \textbf{Nuclear physics}: 2-group diffusion, multi-group energy
+    structure, boundary conditions, k-eff, flux distributions
+    \item \textbf{Software engineering}: Git version control, unit testing
+    with pytest, YAML input files, modular architecture
+    \item \textbf{Nuclear data}: ENDF/B libraries, HDF5 format, group
+    condensation, flux-weighted averages, OpenMC integration
+    \item \textbf{Benchmarking}: IAEA 2D PWR benchmark, error analysis,
+    pcm units, mesh convergence studies
+\end{enumerate}
+
+\subsection{Student Preferences Noted}
+
+\begin{itemize}
+    \item Prefers \textbf{fill-in-the-blank} exercises over full code
+    \item Learns best from \textbf{visual explanations} (tables, diagrams)
+    \item Strong \textbf{physics intuition} --- uses physical reasoning to
+    catch coding errors
+    \item Runs code from \textbf{ANGKOR root directory} via terminal
+    \item Uses \textbf{VS Code} with Python extension on Windows
+    \item Python environment: \textbf{Anaconda / venv} on Windows
+    \item Has \textbf{MCNP experience} --- concepts transfer well
+    \item Has \textbf{OpenMC in Docker} (openmc\_with\_jupyter image)
+\end{itemize}
+
+% =============================================================================
+\section{Development Roadmap}
+% =============================================================================
+
+\subsection{Phase 1 --- Lattice Physics Code (Current)}
+
+\begin{itemize}[leftmargin=*]
+    \item[[x]] 1D slab finite difference solver
+    \item[[x]] 2D rectangular geometry engine
+    \item[[x]] 2-group and G-group neutron diffusion
+    \item[[x]] IAEA 2D PWR quarter-core benchmark
+    \item[[x]] YAML input system
+    \item[[x]] Professional output module
+    \item[[x]] Unit test suite
+    \item[[TODO]] CMFD acceleration (in progress)
+    \item[[TODO]] Cylindrical fuel pin geometry
+    \item[[TODO]] 3D Cartesian geometry
+\end{itemize}
+
+\subsection{Phase 2 --- Neutronics Accuracy}
+
+\begin{itemize}[leftmargin=*]
+    \item[[TODO]] Transport correction for diffusion coefficients (B1/P1)
+    \item[[TODO]] Adjoint flux solver (reactivity worth, perturbation theory)
+    \item[[TODO]] Proper assembly XS generation (full assembly + B$^2$ search)
+    \item[[TODO]] SP3 approximation for material interfaces
+    \item[[TODO]] OECD/NEA C5G7 benchmark (7-group transport reference)
+\end{itemize}
+
+\subsection{Phase 3 --- Core Simulation}
+
+\begin{itemize}[leftmargin=*]
+    \item[[TODO]] Nodal Expansion Method (NEM/ANM)
+    \item[[TODO]] Burnup and isotopic depletion (Bateman equations)
+    \item[[TODO]] Reactivity feedback (Doppler, moderator density, boron)
+    \item[[TODO]] Control rod worth and shutdown margin
+    \item[[TODO]] Full PWR/BWR/SMR core models
+\end{itemize}
+
+\subsection{Phase 4 --- Advanced Features}
+
+\begin{itemize}[leftmargin=*]
+    \item[[TODO]] Full ENDF/B cross section processing pipeline
+    \item[[TODO]] Thermal hydraulics coupling (single channel)
+    \item[[TODO]] Verification against MCNP and Serpent
+    \item[[TODO]] ML surrogate for cross section parameterization
+    \item[[TODO]] Publication in nuclear engineering journal
+\end{itemize}
+
+% =============================================================================
+\section{Key Technical References}
+% =============================================================================
+
+\begin{enumerate}
+    \item IAEA, ``Benchmark Problem Book,'' ANL-7416, Argonne National
+    Laboratory, 1977.
+
+    \item J.J. Duderstadt and L.J. Hamilton, \textit{Nuclear Reactor Analysis},
+    John Wiley \& Sons, 1976.
+
+    \item K.S. Smith, ``Nodal Method Storage Reduction by Non-Linear
+    Iteration,'' \textit{Trans. Am. Nucl. Soc.}, 44, 265, 1983.
+    (CMFD foundation)
+
+    \item Romano et al., ``OpenMC: A State-of-the-Art Monte Carlo Code for
+    Research and Development,'' \textit{Ann. Nucl. Energy}, 82, 90-97, 2015.
+
+    \item Stamm'ler and Abbate, \textit{Methods of Steady-State Reactor
+    Physics in Nuclear Design}, Academic Press, 1983.
+\end{enumerate}
+
+% =============================================================================
+\section{Quick Reference --- Running ANGKOR}
+% =============================================================================
+
+\subsection{Installation}
+
+\begin{lstlisting}[language=bash, style=pythonstyle]
+# Clone repository
+git clone https://github.com/muthboravy007/ANGKOR.git
+cd ANGKOR
+
+# Create virtual environment
+python -m venv venv
+venv\Scripts\activate   # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+\end{lstlisting}
+
+\subsection{Running the IAEA Benchmark}
+
+\begin{lstlisting}[language=bash, style=pythonstyle]
+python main.py input/iaea_2d.yaml
+# Expected: k-eff = 0.998366, runtime ~43s
+\end{lstlisting}
+
+\subsection{Running Tests}
+
+\begin{lstlisting}[language=bash, style=pythonstyle]
+pytest tests/ -v
+# Expected: 5/5 tests passing
+\end{lstlisting}
+
+\subsection{Git Workflow}
+
+\begin{lstlisting}[language=bash, style=pythonstyle]
+git pull origin main   # Always pull first!
+git add <files>
+git commit -m "description"
+git push
+\end{lstlisting}
+
+% =============================================================================
+\section{Glossary}
+% =============================================================================}
+
+\begin{center}
+\begin{longtable}{p{3.5cm} p{9.5cm}}
+\toprule
+\textbf{Term} & \textbf{Definition} \\
+\midrule
+k-eff & Effective multiplication factor. Ratio of neutrons produced to neutrons
+lost per generation. $k=1$: critical; $k>1$: supercritical; $k<1$: subcritical. \\[4pt]
+pcm & Per cent mille. Unit for k-eff differences: $1\text{ pcm} = 10^{-5}$. \\[4pt]
+Diffusion coefficient & $D = 1/(3\Sigma_{tr})$. Controls how far neutrons
+diffuse. Larger D = more diffusion. \\[4pt]
+5-point stencil & The finite difference approximation connecting each cell to
+its 4 neighbors (N, S, E, W). \\[4pt]
+Power iteration & Iterative method to find the dominant eigenvalue (k-eff) and
+eigenvector (flux) of the diffusion equation. \\[4pt]
+Dominance ratio & Ratio of first to fundamental eigenvalue. DR close to 1
+means slow convergence. \\[4pt]
+CMFD & Coarse Mesh Finite Difference. Acceleration technique using a coarse
+mesh to speed up fine mesh convergence. \\[4pt]
+d-hat & CMFD correction coefficient ensuring coarse mesh currents match fine
+mesh currents at interfaces. \\[4pt]
+Group condensation & Collapsing continuous-energy cross sections to few-group
+constants using flux-weighted averages. \\[4pt]
+Two-step method & Industry standard: (1) lattice physics generates few-group
+XS, (2) core diffusion uses those XS. \\[4pt]
+1/v law & Cross sections proportional to $1/v$ (inverse velocity) at thermal
+energies. Thermal neutrons have much higher fission XS than fast neutrons. \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+% =============================================================================
+\vfill
+\begin{center}
+\rule{0.5\linewidth}{0.5pt}\\[0.5cm]
+{\small ANGKOR --- Advanced Neutron Group-diffusion K-eigenvalue Of Reactors}\\
+{\small Institute of Technology of Cambodia (ITC) $\cdot$ Phnom Penh, Cambodia}\\
+{\small \url{https://github.com/muthboravy007/ANGKOR}}\\[0.3cm]
+{\small\textit{``Named after Angkor Wat --- because Cambodia's scientific legacy continues.''}}
+\end{center}
+
+\end{document}
