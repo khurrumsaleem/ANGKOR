@@ -20,7 +20,7 @@ class CMFD:
     solves a small coarse eigenvalue problem, and rebalances fine flux.
     """
 
-    def __init__(self, solver, rf=10, n_groups=2):
+    def __init__(self, solver, rf=4, n_groups=2):
         self.solver = solver
         self.rf     = rf
         self.G      = getattr(solver, "G", n_groups)
@@ -741,10 +741,10 @@ class CMFD:
             self.build_coarse_matrices_mg(dhat_e, dhat_n, Eb)
 
             k_new, flux_c_new = self.solve_coarse_mg(k, phi_init=flux_c)
-            c_sum = flux_c.sum()
-            n_sum = flux_c_new.sum()
-            if n_sum > 0 and c_sum > 0:
-                flux_c_new = flux_c_new * (c_sum / n_sum)
+            # c_sum = flux_c.sum()
+            # n_sum = flux_c_new.sum()
+            # if n_sum > 0 and c_sum > 0:
+            #     flux_c_new = flux_c_new * (c_sum / n_sum)
 
             flux_rb = self.rebalance_flux_mg(flux, flux_c, flux_c_new)
 

@@ -132,11 +132,22 @@ class InputReader:
         )
 
     def _parse_boundary(self):
-        """Read boundary conditions (optional)."""
-        bc = self.data.get("boundary_conditions", {})
+        """Read boundary conditions (optional).
+
+        Accepts either 'boundary' or 'boundary_conditions' as the key.
+        """
+        bc = self.data.get("boundary_conditions",
+                           self.data.get("boundary", {}))
+        valid = {"vacuum", "reflective"}
         for side in ["left", "right", "top", "bottom"]:
             if side in bc:
-                self.boundary[side] = bc[side].lower()
+                value = str(bc[side]).lower()
+                if value not in valid:
+                    raise ValueError(
+                        f"Unknown boundary condition '{bc[side]}' on "
+                        f"'{side}'. Expected one of {sorted(valid)}."
+                    )
+                self.boundary[side] = value
 
     def summary(self):
         """Print a full summary of the loaded input."""

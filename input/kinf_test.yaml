@@ -1,0 +1,36 @@
+title: "Infinite medium fuel - analytic k_inf check"
+
+geometry:
+  type: 2D_rectangular
+  domain_x: 20.0
+  domain_y: 20.0
+  nx: 20
+  ny: 20
+
+regions:
+  - name: fuel
+    x_min: 0.0
+    x_max: 20.0
+    y_min: 0.0
+    y_max: 20.0
+    material: uo2_fuel
+
+materials:
+  uo2_fuel:
+    D1: 1.40
+    D2: 0.37
+    sigma_a1: 0.0095
+    sigma_a2: 0.0820
+    sigma_s12: 0.0210
+    nu_sigma_f1: 0.0060
+    nu_sigma_f2: 0.1350
+
+boundary:
+  left: reflective
+  right: reflective
+  top: reflective
+  bottom: reflective
+
+solver:
+  max_iterations: 1000
+  convergence: 1.0e-10

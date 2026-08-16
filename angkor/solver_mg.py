@@ -185,7 +185,7 @@ class SolverMG:
         print(f"  Matrix S: {self.S.shape}, {self.S.nnz} non-zeros")
         print(f"   Diagonal average leakage term: {np.mean(self.A.diagonal())}")
 
-    def solve(self, cmfd=None, cmfd_interval=5):
+    def solve(self, cmfd=None, cmfd_interval=2):
         """
         Power iteration with optional MG CMFD acceleration.
 
@@ -226,9 +226,12 @@ class SolverMG:
             fission_new = self.F.dot(phi_new)
             k_new     = k * (np.sum(fission_new) / np.sum(fission_source))
             k_error   = abs(k_new - k)
-            phi_error = np.max(
-                np.abs(phi_new - phi) / (np.abs(phi_new) + 1e-12)
-            )
+            # phi_error = np.max(
+            #     np.abs(phi_new - phi) / (np.abs(phi_new) + 1e-12)
+            # )
+            fs_old = fission_source / np.linalg.norm(fission_source)
+            fs_new = fission_new    / np.linalg.norm(fission_new)
+            phi_error = np.linalg.norm(fs_new - fs_old)
 
             phi = phi_new / phi_new.max()
             k   = k_new
@@ -247,10 +250,7 @@ class SolverMG:
             # CMFD continuously nudges phi each iteration; requiring
             # phi_error < tol would prevent convergence since phi_error
             # also measures the CMFD perturbation itself.
-            if cmfd_active:
-                converged = k_error < tol
-            else:
-                converged = (k_error < tol) and (phi_error < tol)
+            converged = (k_error < tol) and (phi_error < tol)
 
             if converged:
                 print(f"\n  CONVERGED at iteration {iteration + 1}!")

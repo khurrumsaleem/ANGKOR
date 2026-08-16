@@ -9,10 +9,10 @@ reader.solver.convergence = 1e-10          # same question as the baseline
 
 solver = SolverMG(reader.engine, reader.materials, reader.solver,
                   n_groups=2, boundary=reader.boundary)
-cmfd = CMFD(solver, rf=10)
+cmfd = CMFD(solver, rf=4)
 
 t0 = time.time()
-k, flux = solver.solve(cmfd=cmfd, cmfd_interval=1)
+k, flux = solver.solve(cmfd=cmfd, cmfd_interval=2)
 t1 = time.time()
 
 print(f"\n  k          = {k:.8f}")
