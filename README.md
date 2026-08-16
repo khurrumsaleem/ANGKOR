@@ -1,63 +1,60 @@
 # ANGKOR ⚛️ 🇰🇭
+
 ### Advanced Neutron Group-diffusion K-eigenvalue Of Reactors Analysis
 
-*Named after Angkor Wat  the greatest achievement of Khmer civilization.*
+*Named after Angkor Wat — the greatest achievement of Khmer civilization.*
 
-ANGKOR is an open-source deterministic reactor physics code developed at the **Institute of Technology of Cambodia (ITC)**. It solves the multi-group neutron diffusion equation on 2D rectangular geometry using finite difference discretization and power iteration for k-eff and flux distribution.
+An open-source deterministic reactor physics code developed at the **Institute of Technology of Cambodia**. It solves the multigroup neutron diffusion equation on 2D rectangular geometry, with CMFD acceleration, and is written entirely in Python to be read.
 
-The code is written entirely in Python and designed to be readable. If you want to understand what a diffusion solver actually does line by line, this is a reasonable place to start.
+If you want to understand what a diffusion solver actually does, line by line, this is a reasonable place to start.
 
----
-
-## Current ANGKOR Capabilities
-
-- Multigroup neutron diffusion: 1G, 2G, 4G, and G-group (arbitrary).
-- 2D rectangular geometry with a 5-point finite difference stencil.
-- Power iteration for k-eff eigenvalue and flux shape distribution.
-- YAML input files: for geometry, materials, and solver settings in one place
-- Geometry visualizer: color-coded material maps rendered interactively
-- Flux maps, power distribution, and centerline profiles on output
-- pytest unit test
+**Status** — `v0.6.0` · multigroup diffusion with verified CMFD acceleration · MIT licensed
 
 ---
 
-## Physics context
+## Verification
 
-ANGKOR solves the within-group diffusion equation iteratively using Gauss-Seidel sweeps, with fission source updates between outer iterations. The current implementation uses point-wise convergence on both flux and k-eff.
+| Check | ANGKOR | Reference | Difference |
+|---|---|---|---|
+| Infinite medium k∞ (analytic) | 1.33026789 | 1.330268 | 0.011 pcm |
+| 1D bare slab (analytic) | 1.305447 | 1.305446 | 0 pcm |
+| PWR 2D slab, CMFD vs unaccelerated | 1.17978975 | 1.17978975 | 0 pcm |
+| CMFD exactness (coarse reproduces fine) | — | — | 0.00000 pcm |
+| IAEA 2D PWR quarter-core | 0.99837 | 1.02959 | −3086 pcm |
 
-The code does **not** use transport-corrected cross sections, CMFD acceleration, or nodal homogenization. This matters for interpreting results — see the validation section below.
+**Convergence:** 130 → 14 outer iterations with CMFD enabled, no under-relaxation.
 
----
+**On the IAEA result.** The −3086 pcm discrepancy is expected. Roughly 2000 pcm comes from the diffusion approximation itself (P1 versus transport), and roughly 1000 pcm from a 2-group energy structure too coarse to capture spectral effects near the fuel–reflector interface. Closing the gap requires transport-corrected diffusion coefficients or more groups in the reflector — both on the roadmap.
 
-## Validation
-
-| Benchmark | ANGKOR k-eff | Reference | Error | Notes |
-|---|---|---|---|---|
-| 1D bare slab (analytical) | 1.305447 | 1.305446 | 0 pcm | Finite difference vs exact |
-| IAEA 2D PWR Quarter-Core | 0.99837 | 1.02959 | −3086 pcm | See below |
-
-**On the IAEA 2D PWR result:** 
-
-* The −3086 pcm discrepancy is expected and physically interpretable. 
-* Roughly 2000 pcm comes from the diffusion approximation itself (P1 vs transport), and roughly 1000 pcm from the 2-group energy structure — too coarse to capture spectral effects near the fuel-reflector interface accurately. 
-* No bugs were found in the solver; this is the correct answer for this level of approximation.
-* For better agreement on this benchmark, either transport-corrected diffusion coefficients or more energy groups near the reflector are needed to implement.
-
-*Run it yourself:*
 ```bash
 python main.py input/iaea_2d.yaml
 ```
+
+---
+
+## Capabilities
+
+- Multigroup neutron diffusion — 1G, 2G, 4G, and arbitrary G
+- 2D rectangular geometry, 5-point finite difference stencil
+- Harmonic face coupling — exact current continuity at material interfaces
+- CMFD acceleration — consistent, no damping
+- Vacuum and reflective boundary conditions
+- Power iteration with direct sparse solves (SciPy `spsolve`)
+- YAML input: geometry, materials, and solver settings in one file
+- Geometry visualiser, flux maps, power distribution, centerline profiles
+- pytest suite including analytic and self-consistency checks
 
 ---
 
 ## Quick start
 
 ```bash
-pip install -r requirements.txt
+uv venv
+uv pip install -r requirements.txt
 python main.py input/iaea_2d.yaml
+pytest -v
 ```
 
-Expected:
 ```
 k-eff = 0.998366
 Results saved to: output/iaea_2d/
@@ -65,7 +62,19 @@ Results saved to: output/iaea_2d/
 
 ---
 
-## Example input file
+## Method notes
+
+**Face coupling.** Interior faces use the harmonic mean `2·Da·Db/((Da+Db)·h²)`, which follows from treating the two half-cells as diffusion resistances in series. An arithmetic or own-cell mean makes the matrix non-symmetric at material interfaces and fails to conserve current across them.
+
+**CMFD.** Nonlinear diffusion acceleration. The correction factor `d̂` closes the coarse face current against the fine-mesh current, so the coarse operator reproduces the fine solution exactly when handed it. This is enforced by a unit test. No under-relaxation is used or needed.
+
+**Boundary coupling.** Coarse vacuum faces use the flux-weighted form `E_b = Σ(D·φ) / (H²·φ̄)`, summed over the fine faces spanning the coarse face. A volume-averaged coefficient under-leaks by roughly the refinement factor.
+
+**Coarse mesh limit.** The coarse cell must not exceed roughly two diffusion lengths of the most tightly coupled group, `L = √(D/Σr)`. For the PWR slab benchmark L₂ ≈ 2.1 cm, so `rf=4` is stable while `rf=20` diverges. Defaults are `rf=4`, `cmfd_interval=2`.
+
+---
+
+## Example input
 
 ```yaml
 title: "IAEA 2D PWR Benchmark"
@@ -78,18 +87,8 @@ geometry:
   ny: 170
 
 regions:
-  - {name         : fuel_core, 
-     x_min        : 0,
-     x_max        : 80,
-     y_min        : 0, 
-     y_max        : 80, 
-     material     : fuel1}
-  - {name         : reflector, 
-     x_min        : 80, 
-     x_max        : 170,
-     y_min        : 0, 
-     y_max        : 170, 
-     material     : reflector}
+  - {name: fuel_core, x_min: 0,  x_max: 80,  y_min: 0, y_max: 80,  material: fuel1}
+  - {name: reflector, x_min: 80, x_max: 170, y_min: 0, y_max: 170, material: reflector}
 
 materials:
   fuel1:
@@ -120,17 +119,16 @@ solver:
 ANGKOR/
 ├── angkor/
 │   ├── geometry_2d.py     # 2D rectangular geometry engine
-│   ├── input_reader.py    # YAML input file reader
+│   ├── input_reader.py    # YAML input reader
 │   ├── solver_2d.py       # 2-group diffusion solver
-│   ├── solver_mg.py       # G-group multi-energy solver
+│   ├── solver_mg.py       # G-group multigroup solver
+│   ├── cmfd.py            # CMFD acceleration
 │   ├── output_2d.py       # Flux maps and power distribution
 │   ├── geometry.py        # 1D geometry (legacy)
 │   └── solver_1d.py       # 1D diffusion solver (legacy)
 ├── input/                 # Input files
-│   ├── iaea_2d.yaml       # IAEA 2D PWR benchmark
-│   └── pwr_2d.yaml        # Simple PWR slab
 ├── output/                # Simulation results
-├── tests/                 # Unit tests
+├── tests/                 # Unit and verification tests
 ├── benchmarks/            # Benchmark cases
 ├── docs/                  # Theory manual
 ├── main.py                # Entry point
@@ -139,121 +137,92 @@ ANGKOR/
 
 ---
 
+## Known limitations
+
+- Coarse cross sections are volume-averaged rather than flux-weighted. Exact only when coarse cells are materially homogeneous.
+- CMFD instability at large refinement factors is detected but not raised; the solver can return a converged-looking wrong answer.
+- No transport correction, no resonance self-shielding, no nodal homogenisation.
+
+---
+
 ## Roadmap
 
-The development path below is organized around three questions:
-**Can it converge faster? Can it model more physics? Can it be validated against
-something hard?**
+Organised around three questions: **can it converge faster, can it model more physics, can it be validated against something hard?**
 
-### Phase 1 — Core solver (in progress)
+### Phase 1 — Core solver
+
 - [x] 1D slab finite difference solver
 - [x] 2D rectangular geometry, 5-point stencil
 - [x] 2-group and G-group multigroup diffusion
 - [x] IAEA 2D PWR quarter-core benchmark
-- [ ] Coarse Mesh Finite Difference (CMFD) acceleration — current Gauss-Seidel
-      outer iteration is slow on fine meshes; CMFD is the standard fix
+- [x] Coarse Mesh Finite Difference (CMFD) acceleration
+- [ ] Flux-weighted coarse homogenization
 - [ ] Chebyshev or JFNK acceleration for eigenvalue convergence
-- [ ] Cylindrical 1D geometry (annular fuel pins, TRIGA-type problems)
-- [ ] 3D Cartesian geometry extension
+- [ ] Cylindrical 1D geometry (annular pins, TRIGA-type problems)
+- [ ] 3D Cartesian extension
 
 ### Phase 2 — Neutronics accuracy
-- [ ] Transport correction for diffusion coefficients (B1 or P1 leakage model)
-- [ ] Adjoint flux solver — needed for perturbation theory, reactivity worths,
-      sensitivity/uncertainty analysis (SCALE TSUNAMI-equivalent workflow)
-- [ ] Reflector discontinuity factors (Koebke's equivalent homogenization)
-- [ ] SP3 approximation for better accuracy near material interfaces without
-      going to full transport
-- [ ] Multigroup cross section library reader — at minimum support for 2G and
-      few-group WIMS/SCALE-format collapsed libraries
-- [ ] Benchmark suite: ANL benchmarks, OECD/NEA C5G7 (transport reference),
-      KAIST 3D PWR benchmark
+
+- [ ] Transport correction for diffusion coefficients (B1 or P1 leakage)
+- [ ] Adjoint flux solver — perturbation theory, reactivity worth, sensitivity and uncertainty analysis (SCALE TSUNAMI-equivalent workflow)
+- [ ] Reflector discontinuity factors (Koebke equivalent homogenization)
+- [ ] SP3 approximation — better accuracy near material interfaces without full transport
+- [ ] Multigroup cross section library reader (WIMS/SCALE few-group formats)
+- [ ] Benchmark suite: ANL, OECD/NEA C5G7, KAIST 3D PWR
 
 ### Phase 3 — Core simulation
-- [ ] Nodal Expansion Method (NEM) or Analytic Nodal Method (ANM) — orders of
-      magnitude faster than fine-mesh FD for full-core LWR problems; this is
-      what SIMULATE and DIF3D actually use
-- [ ] Burnup and isotopic depletion (Bateman equations, matrix exponential
-      solver)
-- [ ] Reactivity feedback: Doppler broadening, moderator temperature/density,
-      boron concentration
+
+- [ ] Nodal Expansion or Analytic Nodal Method — orders of magnitude faster than fine-mesh FD on full-core LWR problems, and what SIMULATE and DIF3D actually use
+- [ ] Burnup and isotopic depletion (Bateman, matrix exponential)
+- [ ] Reactivity feedback: Doppler, moderator temperature and density, boron
 - [ ] Control rod cusping correction
-- [ ] Shutdown margin and ejected rod worth calculation
+- [ ] Shutdown margin and ejected rod worth
 
-### Phase 4 — Advanced / research features
-- [ ] Full ENDF/B cross section processing pipeline (or interface to NJOY output)
+### Phase 4 — Research features
+
+- [ ] ENDF/B processing pipeline, or an NJOY output interface
 - [ ] Simplified thermal hydraulics coupling (single channel, COBRA-like)
-- [ ] Stochastic uncertainty quantification (sampling-based, compatible with
-      SCALE/Sampler workflow)
-- [ ] Machine learning surrogate for cross section parameterization vs burnup,
-      temperature, and boron — interface point with ongoing ML research at ITC
-- [ ] Verification against OpenMC and Serpent on identical geometry/material
-      definitions
+- [ ] Stochastic uncertainty quantification (SCALE/Sampler-compatible)
+- [ ] ML surrogate for cross section parameterization versus burnup, temperature, and boron
+- [ ] Verification against OpenMC and Serpent on identical definitions
 
-### What this code will not try to do
-Full Monte Carlo transport, resolved resonance processing, and production-grade
-thermal hydraulics are out of scope by design. Those problems are solved by
-OpenMC, Serpent, and RELAP/TRACE. ANGKOR's role is to be a readable, modifiable
-diffusion solver that a graduate student can actually debug.
+### Out of scope by design
+
+Full Monte Carlo transport, resolved resonance processing, and production-grade thermal hydraulics. Those problems are solved by OpenMC, Serpent, and RELAP/TRACE. ANGKOR's role is to be a readable, modifiable diffusion solver that a graduate student can actually debug.
 
 ---
 
-## Why open source?
+## Why open source
 
-Commercial reactor physics codes (CASMO, SIMULATE, DIF3D, PARCS) are accurate
-but opaque. SCALE is excellent but requires a license and considerable setup.
-OpenMC is open source and rigorous but solves a different equation.
+Commercial reactor physics codes such as CASMO, SIMULATE, DIF3D, PARCS are accurate but not free. SCALE is excellent but requires a license and considerable setup. OpenMC is open source and use Monte Carlo method.
 
-There is no clean, well-documented, Python-based diffusion solver that a
-student can read in a weekend and modify without fear. ANGKOR tries to fill that
-gap. The code is not production-grade. It is meant to be readable and educational first — useful second.
-
-If you find a bug, open an issue. If you use it for a class or a paper, a
-citation is appreciated.
+If you find a bug, open an issue. If you use it for a class or a paper, a citation is appreciated.
 
 ---
 
-## For researchers
+## Collaboration
 
-If you work on reactor physics, neutronics methods, or nuclear data and want to
-collaborate — particularly on the CMFD acceleration, nodal methods, or
-cross section library integration — get in touch.
+If you work on reactor physics, neutronics methods, or nuclear data and particularly on nodal methods, transport correction, or cross section library integration let get in touch.
 
-The ITC group is also developing ML surrogate models for SMR k-effective
-prediction using CASMO/SIMULATE-generated training data. If that overlaps with
-your work, reach out directly.
-
----
-
-## About
-
-ANGKOR is developed at the **Institute of Technology of Cambodia (ITC)**,
-Phnom Penh, Cambodia 🇰🇭.
+The ITC group is also developing ML surrogate models for SMR k-effective prediction using CASMO/SIMULATE-generated training data. If that overlaps with your work, reach out directly. ITC group currently has only me :( 
 
 ---
 
 ## Author
 
-**MUTH Boravy**  
-PhD, Nuclear Engineering  
-Institute of Technology of Cambodia (ITC)  
-Phnom Penh, Cambodia  
-[GitHub](https://github.com/muthboravy007)
-
----
+**MUTH Boravy**
+PhD, Nuclear Engineering
+Institute of Technology of Cambodia, Phnom Penh, Cambodia 🇰🇭
+[github.com/muthboravy007](https://github.com/muthboravy007)
 
 ## License
 
 MIT — free to use, modify, and distribute. See [LICENSE](LICENSE).
 
----
-
 ## Citation
 
 ```
-<<<<<<< HEAD
-MUTH Boravy, "ANGKOR: Advanced Neutron Group-diffusion K-eigenvalue Of Reactors Analysis", Institute of Technology of Cambodia, 2025.
-=======
-MUTH Boravy, "ANGKOR: Advanced Neutron Group-diffusion K-eigenvalue Of Reactors", Institute of Technology of Cambodia, 2025.
->>>>>>> 44c1fe2 (Update)
+MUTH Boravy, "ANGKOR: Advanced Neutron Group-diffusion K-eigenvalue Of
+Reactors Analysis", Institute of Technology of Cambodia, 2025.
 https://github.com/muthboravy007/ANGKOR
 ```
